@@ -1,8 +1,8 @@
-from src.database import writeSongs
+from src.database import writeSongs, initDb
 
 def getSongs():
   '''Prompt for top 3 songs and play counts'''
-  print("/n Answer in this format: [Song Name] [Number of Plays]")
+  print("\n Answer in this format: [Song Name] [Number of Plays]")
   input1 = input("What is your most played song? ")
   input2 = input("What is your most 2nd played song? ")
   input3 = input("What is your most 3rd played song? ")
@@ -11,14 +11,16 @@ def getSongs():
 def parseSongs(input):
   '''Parse a list of Name, Count into (title, plays)'''
   songs = []
-  for entry in inputs:
-    parts = response = input.split(" ")
+  for entry in input:
+    parts = entry.rsplit(" ", 1)
     title = parts[0]
-    plays = int(parts[1])
+    plays = int(parts[1]) if len(parts) == 2 and parts[1].isdigit() else 0
     songs.append((title, plays))
   return songs
 
 def main():
+  initDb()
+  
   # Step 1: Get songs from user
   inputs = getSongs()
 
@@ -28,7 +30,7 @@ def main():
   # Step 3: Write seed songs to database
   writeSongs(songs)
 
-  # Step 4: Search Spotify for each song''s artist and genre
+  # Step 4: Search Spotify for each song's artist and genre
 
   # Step 5: Filter by genre, rank by popularity
 
@@ -42,8 +44,6 @@ def main():
 
   # Step 10: Show metrics (genre %, artist %)
 
-  # build recommendations
-  recommendSongs()
 
 if __name__ == "__main__":
   main()
