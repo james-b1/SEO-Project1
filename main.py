@@ -1,4 +1,4 @@
-from src.spotify_client import search_artist, collectRelatedArtists, build_playlist
+from src.spotify_client import search_artist, collectRelatedArtists, rank_top_tracks
 from src.database import (
     init_db, write_songs,
     write_recommended_artists, update_artist_explanations,

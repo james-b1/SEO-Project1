@@ -16,7 +16,7 @@ def get_client():
 
 sp = get_client()
 
-def getCollaborators(artist):
+def get_collaborators(artist):
   """Returns a list of full collaborator artist objects"""
   artistId = artist["id"]
 
@@ -30,7 +30,7 @@ def getCollaborators(artist):
   # spotify returns the same album many times across markets, so dedupe
   # by name to avoid a pile of redundant track lookups.
   seen = set()
-  uniqueAlbums = []
+  unique_albums = []
   for album in albums:
     key = album["name"].lower()
     if key not in seen:
@@ -38,36 +38,61 @@ def getCollaborators(artist):
       uniqueAlbums.append(album)
 
   # get credited artists from each album's tracks
-  collaboratorIds = set()
-  for album in uniqueAlbums:
+  collaborator_ids = set()
+  for album in unique_albums:
     for track in sp.album_tracks(album["id"])["items"]:
       for credited in track["artists"]:
         if credited["id"] != artistId:
-          collaboratorIds.add(credited["id"])
+          collaborator_ids.add(credited["id"])
 
   if not collaboratorIds:
     return []
 
   collaborators = []
-  ids = list(collaboratorIds)
+  ids = list(collaborator_ids)
   for i in range(0, len(ids), 50):
     collaborators.extend(sp.artists(ids[i:i + 50])["artists"])
 
   return collaborators
 
 
-def sameGenre(artistA, artistB):
+def same_genre(artist_a, artist_b):
   """True if the two artists share at least one genre."""
-  return bool(set(artistA["genres"]) & set(artistB["genres"]))
+  return bool(set(artist_a["genres"]) & set(artist_b["genres"]))
 
 
-def filterByGenre(inputArtist, collaborators):
+def filter_by_genre(input_artist, collaborators):
   """Keep only collaborators who share a genre with the input artist."""
-  return [c for c in collaborators if sameGenre(inputArtist, c)]
+  return [c for c in collaborators if sameGenre(input_artist, c)]
 
 
-def collectRelatedArtists(artist):
+def collect_related_artists(artist):
   """Return same genre collaborators for an input artist"""
   collaborators = getCollaborators(artist)
   return filterByGenre(artist, collaborators)
   
+def get_top_tracks(artist):
+  """An artist's most popular tracks as dictionaries"""
+  results = sp.artist_top_tracks(artist["id"], country=country)
+
+  return [
+    {
+      "title": t["name"],
+      "track_id": t["id"],
+      "popularity": t["popularity"],
+      "artist_name": artist["name"],
+      "album_id": t["album"]["id"], # for the same-album swap step
+      "album_name": t["album"]["name"],
+    }
+    for t in results["tracks"]
+  ]
+
+def rank_top_tracks(artists, country="US"):
+  """Pool every artist's top tracks, dedupe by track, and rank by
+    popularity."""
+  pool = {}
+  for artist in artists:
+    for track in get_top_tracks(artist, country=country):
+      pool[track["track_id"]] = track
+      
+  return sort(pool.values(), key=lambda t: t["popularity"], reverse=True)
