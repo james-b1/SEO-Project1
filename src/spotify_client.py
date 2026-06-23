@@ -20,12 +20,13 @@ def get_client():
   )
 
 
-sp = get_client()
+
 
 
 def search_artist(song_name, limit=10):
   """Find the most popular artist who released a track with the same
      title as input song. Returns a single artists, dictionaries, or None."""
+  sp = get_client()
   results = sp.search(q=song_name, type="track", limit=limit)
   tracks = results["tracks"]["items"]
 
@@ -55,6 +56,7 @@ def search_artist(song_name, limit=10):
 
 def get_collaborators(artist):
   """Returns a list of full collaborator artist objects"""
+  sp = get_client()
   artist_id = artist["id"]
 
   albums = []
@@ -112,6 +114,7 @@ def collect_related_artists(artist):
 
 def get_top_tracks(artist, country="US"):
   """An artist's most popular tracks as dictionaries"""
+  sp = get_client()
   results = sp.artist_top_tracks(artist["id"], country=country)
 
 
