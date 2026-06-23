@@ -1,38 +1,80 @@
-from src.spotify_client import search_artist, collectRelatedArtists, rank_top_tracks
+from src.spotify_client import search_artist, get_collaborators, rank_top_tracks
+from src.genai_client import explain_artist
 from src.database import (
     init_db, write_songs,
     write_recommended_artists, update_artist_explanations,
-    write_playlist,
+    write_playlist, clear_playlist,
 )
 
 def get_songs():
   '''Prompt for top 3 songs and play counts'''
-  print("\n Answer in this format: [Song Name] [Number of Plays]")
+  print("\nAnswer in this format: [Song Name] [Number of Plays]")
   input1 = input("What is your most played song? ")
-  input2 = input("What is your most 2nd played song? ")
-  input3 = input("What is your most 3rd played song? ")
+  input2 = input("What is your 2nd most played song? ")
+  input3 = input("What is your 3rd most played song? ")
   return [input1, input2, input3]
 
 def get_playlist_size():
   '''Ask how many songs the playlist should have (default 30).'''
-  answer = input("How many songs do you want in your playlist? We default to 30!")
+  answer = input("How many songs do you want in your playlist? We default to 30? ")
   return int(answer) if answer.isdigit() and int(answer) > 0 else 30
 
 def parse_songs(entries):
-  '''Parse a list of Name, Count into (title, plays)'''
+  '''Parse a list of "Name, Count" (str) into (title, plays) (tuple)'''
   songs = []
   for entry in entries:
     parts = entry.rsplit(" ", 1)
     if len(parts) == 2 and parts[1].isdigit():
-       title, plays = parts[0], int(parts[1])
+      title, plays = parts[0], int(parts[1])
     else:
       title, plays = entry, 0   # no valid count: keep the whole title
     songs.append((title, plays))
   return songs
 
+def swap_songs(playlist, candidates):
+  '''Lets the user drop songs they don't like. Removing a song also drops
+     any same-album siblings, then the gaps refill from the candidate pool,
+     skipping albums the user has already rejected.'''
+  size = len(playlist)
+  rejected_albums = set()
+
+  while True:
+    print("\n Your Playlist:")
+
+    for i, track in enumerate(playlist, 1):
+      print(f"{i}. {track['title']} by {track['artist_name']}")
+
+    choice = input(
+      "Number to remove a song or Enter to keep the playlist: "
+      ).strip()
+
+    if not choice:
+      return playlist
+
+    if not choice.isdigit() or not (1 <= int(choice) <= len(playlist)):
+      print("Please enter a valid number from the list.")
+      continue
+
+    idx = int(choice)
+    removed_track = playlist[idx - 1]
+    album = removed_track['album_id']
+    rejected_albums.add(album)
+
+    playlist = [t for t in playlist if t != removed_track]
+
+    on_list = {t['track_id'] for t in playlist}
+    for candidate in candidates:
+      if len(playlist) >= size:
+        break
+      if candidate["album_id"] in rejected_albums or candidate["track_id"] in on_list:
+        continue
+
+      playlist.append(candidate)
+      on_list.add(candidate['track_id'])
+
 def main():
   init_db()
-  
+
   # Step 1: Get songs from user
   inputs = get_songs()
 
@@ -49,15 +91,56 @@ def main():
     if result:
       artists.append(result)
 
-  # Step 5: Filter by genre, rank by popularity
+  # Step 5: Expand each input artist into same-genre collaborators.
+  input_ids = {a['id'] for a in artists}
+  pool = {}
+  links = {}
+
+  for artist in artists:
+    for collaborator in get_collaborators(artist): # track collaborators for next step
+      cid = collaborator['id']
+      if cid not in input_ids:
+        pool[cid] = collaborator
+        links.setdefault(cid, set()).add(artist["name"])
+
+  recommended = sorted(pool.values(), key=lambda a: a['popularity'], reverse=True)
+  recommended = recommended[:3] # set cap to 3 API calls
+  write_recommended_artists(recommended)
 
   # Step 6: Get GenAI explanations for each recommended artist
+  print("\n Recommended Artists: ")
 
-  # Step 7: Show recommendations, user can swap if they want
+  explanations = []
+  for artist in recommended:
+    connected_to = sorted(links.get(artist['id'], []))
 
-  # Step 8: Display final list with explanations
-  
+    try:
+      text = explain_artist(artist, connected_to)
+    except Exception as err:
+      print(f"  (skipped {artist['name']}: {err})")
+      continue
+
+    explanations.append((text, artist['id']))
+    print(f"  {artist['name']}: {text}")
+
+  update_artist_explanations(explanations)
+
+  # Step 7: Build the playlist
+  size = get_playlist_size()
+  candidates = rank_top_tracks(recommended)
+  playlist = candidates[:size]
+
+  # Step 8: Let the user remove songs he doesn't like
+  playlist = swap_songs(playlist, candidates)
+
+  clear_playlist()
+  write_playlist(playlist)
+
   # Step 9: Write final playlist to database
+  print(f"\nFinal Playlist ({len(playlist)} songs):")
+  for i, track in enumerate(playlist, 1):
+    print(f"  {i}. {track['title']} by {track['artist_name']} "
+          f"(popularity {track['popularity']})")
 
   # Step 10: Show metrics (genre %, artist %)
 

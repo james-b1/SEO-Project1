@@ -1,5 +1,4 @@
 import sqlite3
-from datetime import datetime
 
 DB_PATH= "recommender.db"
 
@@ -61,7 +60,7 @@ def get_songs():
   return rows
 
 # -------------------Recommendations----------------------
-def writeRecommendedArtists(artists):
+def write_recommended_artists(artists):
   connection = get_connection()
   cursor = connection.cursor()
   rows = [
@@ -85,8 +84,27 @@ def writeRecommendedArtists(artists):
   connection.commit()
   connection.close()
 
-def getRecommendedArtists():
-    connection = get_connection()
+def update_artist_explanations(explanations):
+  """
+  Update GenAI explanations for recommended artists.
+  """
+  connection = get_connection()
+  cursor = connection.cursor()
+
+  cursor.executemany(
+      """
+      UPDATE recommended_artists
+      SET explanation = ?
+      WHERE spotify_id = ?
+      """,
+      explanations,
+  )
+
+  connection.commit()
+  connection.close()
+
+def get_recommended_artists():
+  connection = get_connection()
   cursor = connection.cursor()
   cursor.execute(
     "SELECT name, spotify_id, genre, popularity, explanation "
@@ -106,7 +124,7 @@ def getRecommendedArtists():
   ]
 
 # ---------------------------Playlists---------------------------
-def writePlaylist(tracks):
+def write_playlist(tracks):
   connection = get_connection()
   cursor = connection.cursor()
 
@@ -120,18 +138,18 @@ def writePlaylist(tracks):
     INSERT or IGNORE INTO playlist_entries
       (title, track_id, artist_name, album_id, popularity)
     VALUES (?, ?, ?, ?, ?)
-    """
+    """,
     rows,
     )
-  connection.comit()
+  connection.commit()
   connection.close()
 
-def getplaylist():
-  conenction = get_connection()
+def get_playlist():
+  connection = get_connection()
   cursor = connection.cursor()
 
   cursor.execute(
-    "SELECT title, track_id, artist_name, album_id, popularity"
+    "SELECT title, track_id, artist_name, album_id, popularity "
     "FROM playlist_entries ORDER BY popularity DESC"
   )
   rows = cursor.fetchall()
@@ -142,6 +160,13 @@ def getplaylist():
      for (title, track_id, artist_name, album_id, popularity) in rows
   ]
 
+def clear_playlist():
+  connection = get_connection()
+  cursor = connection.cursor()
+  cursor.execute("DELETE FROM playlist_entries")
+  connection.commit()
+  connection.close()
+  
 # -----------------------------Metrics---------------------------
-def getMetrics():
+def get_metrics():
   pass
