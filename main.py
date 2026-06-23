@@ -71,8 +71,10 @@ def swap_songs(playlist, candidates):
 
       playlist.append(candidate)
       on_list.add(candidate['track_id'])
+  return playlist
 
 def main():
+  """Run PyTunes CLI"""
   init_db()
 
   # Step 1: Get songs from user
@@ -127,7 +129,7 @@ def main():
 
   # Step 7: Build the playlist
   size = get_playlist_size()
-  candidates = rank_top_tracks(recommended)
+  candidates = rank_top_tracks(recommended, limit=(size*2))
   playlist = candidates[:size]
 
   # Step 8: Let the user remove songs he doesn't like
