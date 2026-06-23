@@ -12,9 +12,16 @@ def get_client():
     client_id=os.getenv("SPOTIFY_CLIENT_ID"),
     client_secret=os.getenv("SPOTIFY_CLIENT_SECRET"),
   )
-  return spotipy.Spotify(auth_manager=auth_manager)
+  return spotipy.Spotify(
+    auth_manager=auth_manager,
+    requests_timeout=10,
+    retries=0,
+    status_retries=0,
+  )
+
 
 sp = get_client()
+
 
 def search_artist(song_name, limit=10):
   """Find the most popular artist who released a track with the same
@@ -33,7 +40,7 @@ def search_artist(song_name, limit=10):
     if primary_id not in artist_ids:
       artist_ids.append(primary_id)
 
-  full_artists = [sp.artist(artist_id) for artist_id in artist_ids]
+  full_artists = sp.artists(artist_ids)["artists"]
   full_artists.sort(key=lambda a: a.get("popularity", 0), reverse=True)
 
   a = full_artists[0]
@@ -80,8 +87,9 @@ def get_collaborators(artist):
 
   collaborators = []
   ids = list(collaborator_ids)
-  for i in range(0, len(ids), 10):
-    collaborators.extend(sp.artist(artist_id) for artist_id in collaborator_ids)
+  for i in range(0, len(ids), 50):
+    batch = ids[i:i + 50]
+    collaborators.extend(sp.artists(batch)["artists"])
 
   return collaborators
 
@@ -101,9 +109,11 @@ def collect_related_artists(artist):
   collaborators = get_collaborators(artist)
   return filter_by_genre(artist, collaborators)
   
+
 def get_top_tracks(artist, country="US"):
   """An artist's most popular tracks as dictionaries"""
   results = sp.artist_top_tracks(artist["id"], country=country)
+
 
   return [
     {
@@ -117,7 +127,15 @@ def get_top_tracks(artist, country="US"):
     for t in results["tracks"]
   ]
 
+
 def rank_top_tracks(artists, limit=10):
   """Pool every artist's top tracks, dedupe by track, and rank by
     popularity."""
+  pool = {}
+  for artist in artists:
+    for track in get_top_tracks(artist):
+      pool[track["track_id"]] = track # dedupe
+    
+  ranked = sorted(pool.values(), key=lambda t: t["popularity"], reverse=True)
+  return ranked[:limit]
   
