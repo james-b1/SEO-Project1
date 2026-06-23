@@ -50,7 +50,12 @@ def writeSongs(songs):
   connection.close()
 
 def getSongs():
-  pass
+  connection = getConnection()
+  writer = connection.cursor()
+  writer.execute("SELECT title, play_count FROM songs")
+  rows = writer.fetchall()
+  connection.close()
+  return rows
 
 # --Recommendations--
 def writeRecommendedArtists(artists):
