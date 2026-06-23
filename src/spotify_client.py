@@ -1,5 +1,5 @@
 import spotipy
-from spotify.oauth2 import SpotifyClientCredentials
+from spotipy.oauth2 import SpotifyClientCredentials
 import os
 from dotenv import load_dotenv
 
@@ -14,35 +14,60 @@ def get_client():
   )
   return spotipy.Spotify(auth_manager=auth_manager)
 
-def search_artist(title):
-  """
-  Searching Spotify for a song title and returning primary artist's details
+sp = get_client()
 
-  Song title -> dictionary
-  """
+def getCollaborators(artist):
+  """Returns a list of full collaborator artist objects"""
+  artistId = artist["id"]
+
+  albums = []
+  results = sp.artist_albums(artistId, album_type="album,single", limit=50)
+  albums.extend(results["items"])
+  while results["next"]:
+    results = sp.next(results)
+    albums.extend(results["items"])
+
+  # spotify returns the same album many times across markets, so dedupe
+  # by name to avoid a pile of redundant track lookups.
+  seen = set()
+  uniqueAlbums = []
+  for album in albums:
+    key = album["name"].lower()
+    if key not in seen:
+      seen.add(key)
+      uniqueAlbums.append(album)
+
+  # get credited artists from each album's tracks
+  collaboratorIds = set()
+  for album in uniqueAlbums:
+    for track in sp.album_tracks(album["id"])["items"]:
+      for credited in track["artists"]:
+        if credited["id"] != artistId:
+          collaboratorIds.add(credited["id"])
+
+  if not collaboratorIds:
+    return []
+
+  collaborators = []
+  ids = list(collaboratorIds)
+  for i in range(0, len(ids), 50):
+    collaborators.extend(sp.artists(ids[i:i + 50])["artists"])
+
+  return collaborators
+
+
+def sameGenre(artistA, artistB):
+  """True if the two artists share at least one genre."""
+  return bool(set(artistA["genres"]) & set(artistB["genres"]))
+
+
+def filterByGenre(inputArtist, collaborators):
+  """Keep only collaborators who share a genre with the input artist."""
+  return [c for c in collaborators if sameGenre(inputArtist, c)]
+
+
+def collectRelatedArtists(artist):
+  """Return same genre collaborators for an input artist"""
+  collaborators = getCollaborators(artist)
+  return filterByGenre(artist, collaborators)
   
-  sp = get_client()
-
-  results = sp.search(q=title, type="track", limit=1)
-  tracks = results.get("tracks", {}).get("items", [])
-
-  if not tracks:
-    print(f" No results found for '{title}', skipping.")
-    return None
-  
-  artist_stub = tracks[0]["artists"][0]
-  artist_id = artist_stub["id"]
-
-  artist = sp.artist(artist_id)
-
-  genres = artist.get("genres", [])
-
-
-  return {
-    "name": artist["Name"],
-    "spotify_id": artist_id,
-    "genre": genres[0] if genres else None,
-    "popularity": artist.get("popularity", 0),
-    "all_genres": genres,
-    "explanation": None
-  }
