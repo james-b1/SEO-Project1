@@ -40,7 +40,14 @@ def initDb():
 
 # --Songs--
 def writeSongs(songs):
-  pass
+  connection = getConnection()
+  writer = connection.cursor()
+  writer.executemany(
+    "INSERT INTO songs (title, play_count) VALUES(?, ?)",
+    songs
+  )
+  connection.commit()
+  connection.close()
 
 def getSongs():
   pass
