@@ -4,7 +4,7 @@ from datetime import datetime
 DB_PATH= "recommender.db"
 
 def get_connection():
-  ''' Validate Connection '''
+  ''' Opens Connection '''
   return sqlite3.connect(DB_PATH)
 
 def init_db():

@@ -1,4 +1,5 @@
 from src.database import write_songs, init_db
+from src.spotify_client import search_artist
 
 def get_songs():
   '''Prompt for top 3 songs and play counts'''
@@ -8,10 +9,10 @@ def get_songs():
   input3 = input("What is your most 3rd played song? ")
   return [input1, input2, input3]
 
-def parse_songs(input):
+def parse_songs(entries):
   '''Parse a list of Name, Count into (title, plays)'''
   songs = []
-  for entry in input:
+  for entry in entries:
     parts = entry.rsplit(" ", 1)
     title = parts[0]
     plays = int(parts[1]) if len(parts) == 2 and parts[1].isdigit() else 0
@@ -31,6 +32,11 @@ def main():
   write_songs(songs)
 
   # Step 4: Search Spotify for each song's artist and genre
+  artists = []
+  for title, _ in songs:
+    result = search_artist(title)
+    if result:
+      artists.append(result)
 
   # Step 5: Filter by genre, rank by popularity
 
