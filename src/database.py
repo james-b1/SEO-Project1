@@ -3,12 +3,12 @@ from datetime import datetime
 
 DB_PATH= "recommender.db"
 
-def getConnection():
+def get_connection():
   ''' Validate Connection '''
   return sqlite3.connect(DB_PATH)
 
-def initDb():
-  connection = getConnection()
+def init_db():
+  connection = get_connection()
   writer = connection.cursor()
 
   writer.executescript("""
@@ -39,8 +39,8 @@ def initDb():
   connection.close()
 
 # --Songs--
-def writeSongs(songs):
-  connection = getConnection()
+def write_songs(songs):
+  connection = get_connection()
   writer = connection.cursor()
   writer.executemany(
     "INSERT INTO songs (title, play_count) VALUES(?, ?)",
@@ -49,8 +49,8 @@ def writeSongs(songs):
   connection.commit()
   connection.close()
 
-def getSongs():
-  connection = getConnection()
+def get_songs():
+  connection = get_connection()
   writer = connection.cursor()
   writer.execute("SELECT title, play_count FROM songs")
   rows = writer.fetchall()
