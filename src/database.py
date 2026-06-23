@@ -169,4 +169,24 @@ def clear_playlist():
   
 # -----------------------------Metrics---------------------------
 def get_metrics():
-  pass
+  connection = get_connection()
+  writer = connection.cursor()
+
+  writer.execute(
+    "SELECT artist_name, COUNT(*) as count "
+    "FROM playlist_entries GROUP BY artist_name"
+  )
+
+  rows = writer.fetchall()
+  connection.close()
+
+  total = sum(count for _, count in rows)
+  if total == 0:
+    return {"artist_breakdown", {}}
+  
+  artist_breakdown = {
+    name: round((count / total) * 100, 1)
+    for name, count in rows
+  }
+
+  return {"artist_breakdown": artist_breakdown}

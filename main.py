@@ -3,7 +3,7 @@ from src.genai_client import explain_artist
 from src.database import (
     init_db, write_songs,
     write_recommended_artists, update_artist_explanations,
-    write_playlist, clear_playlist,
+    write_playlist, clear_playlist, get_metrics
 )
 
 def get_songs():
@@ -145,6 +145,14 @@ def main():
           f"(popularity {track['popularity']})")
 
   # Step 10: Show metrics (genre %, artist %)
+  metrics = get_metrics()
+  breakdown = metrics.get("artist_breakdown", {})
+  if breakdown:
+    print("")
+    for artist_name, pct in sorted(
+      breakdown.items(), key=lambda x: x[1], reverse=True
+    ):
+      print(f"  {artist_name}: {pct}%")
 
 
 if __name__ == "__main__":
