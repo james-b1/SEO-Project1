@@ -1,4 +1,5 @@
-import spotipy from spotipy.exceptions import SpotifyException
+import spotipy 
+from spotipy.exceptions import SpotifyException
 from spotipy.oauth2 import SpotifyClientCredentials
 import os
 import time

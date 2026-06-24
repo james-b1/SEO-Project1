@@ -119,7 +119,7 @@ def main():
 
   recommended = sorted(
     pool.values(), 
-    key=lambda a: (scores.get(a["id"], 0), a.get(["popularity"], 0)),
+    key=lambda a: (scores.get(a["id"], 0), a.get("popularity", 0)),
     reverse=True
     )[:3] # set cap to 3 API calls
   write_recommended_artists(recommended)
