@@ -1,4 +1,4 @@
-import spotipy
+import spotipy from spotipy.exceptions import SpotifyException
 from spotipy.oauth2 import SpotifyClientCredentials
 import os
 import time
@@ -25,83 +25,67 @@ def search_artist(song_name, limit=10):
   """Find the most popular artist who released a track with the same
      title as input song. Returns a single artists, dictionaries, or None."""
   sp = get_client()
-  results = sp.search(q=song_name, type="track", limit=limit)
-  tracks = results["tracks"]["items"]
 
-  exact = [t for t in tracks if t["name"].lower() == song_name.lower()]
+  try:
+    results = sp.search(q=song_name, type="track", limit=limit)
+    tracks = results["tracks"]["items"]
 
-  if not exact:
-    return None
-  
-  artist_ids = []
-  for t in exact:
-    primary_id = t["artists"][0]["id"]
-    if primary_id not in artist_ids:
-      artist_ids.append(primary_id)
+    exact = [t for t in tracks if t["name"].lower() == song_name.lower()]
 
-  # full_artists = sp.artists(artist_ids)["artists"]
-  full_artists = [sp.artist(aid) for aid in artist_ids]
-  full_artists.sort(key=lambda a: a.get("popularity", 0), reverse=True)
+    if not exact:
+      return None
+    
+    artist_ids = []
+    for t in exact:
+      primary_id = t["artists"][0]["id"]
+      if primary_id not in artist_ids:
+        artist_ids.append(primary_id)
 
-  a = full_artists[0]
+    # full_artists = sp.artists(artist_ids)["artists"]
+    full_artists = [sp.artist(aid) for aid in artist_ids]
+    full_artists.sort(key=lambda a: a.get("popularity", 0), reverse=True)
 
-  return {
-    "name": a["name"],
-    "id": a["id"],
-    "popularity": a.get("popularity", 0),
-    "genres": a.get("genres", [])
-  }
-  
+    a = full_artists[0]
 
-def get_collaborators(artist):
+    return {
+      "name": a["name"],
+      "id": a["id"],
+      "popularity": a.get("popularity", 0),
+      "genres": a.get("genres", [])
+    }
+  except SpotifyException as err:
+    if err.http_status == 429:
+      print("Spotify rate limit reached. Try again later.")
+      return None
+    raise
+
+def get_collaborators(artist, limit=5):
   """Returns a list of full collaborator artist objects"""
   sp = get_client()
-  artist_id = artist["id"]
+  genres = artist.get("genres", [])
 
-  albums = []
-  results = sp.artist_albums(artist_id, album_type="album,single", limit=5)
-  albums.extend(results["items"])
-  # while results["next"]:
-  #   results = sp.next(results)
-  #   albums.extend(results["items"])
-
-  # spotify returns the same album many times across markets, so dedupe
-  # by name to avoid a pile of redundant track lookups.
-  seen = set()
-  unique_albums = []
-  for album in albums:
-    key = album["name"].lower()
-    if key not in seen:
-      seen.add(key)
-      unique_albums.append(album)
-
-  # get credited artists from each album's tracks
-  collaborator_ids = set()
-  for album in unique_albums:
-    time.sleep(0.3)
-    for track in sp.album_tracks(album["id"])["items"]:
-      for credited in track["artists"]:
-        if credited["id"] != artist_id:
-          collaborator_ids.add(credited["id"])
-
-  if not collaborator_ids:
+  if not genres:
     return []
+  
+  genre = genres[0]
+  results = sp.search(
+    q=f'genre:{genre}',
+    type="artist",
+    limit=limit
+  )
 
   collaborators = []
-  ids = list(collaborator_ids)
-  # for i in range(0, len(ids), 50):
-  #   batch = ids[i:i + 50]
-  #   collaborators.extend(sp.artists(batch)["artists"])
-  for cid in collaborator_ids:
-    artist_data = sp.artist(cid)
-    # wrap response to protect against key lookup errors
-    collaborators.append({
-      "name": artist_data["name"],
-      "id": artist_data["id"],
-      "popularity": artist_data.get("popularity", 0),
-      "genres": artist_data.get("genres", [])
-    })
+  for item in results.get("artists", {}).get("items", []):
+    if item["id"] == artist["id"]:
+      continue
 
+    collaborators.append({
+      "name": item["name"],
+      "id": item["id"],
+      "popularity": item.get("popularity", 0),
+      "genres": item.get("genres", [])
+    })
+    
   return collaborators
 
 
@@ -124,9 +108,18 @@ def collect_related_artists(artist):
 def get_top_tracks(artist, country="US", limit=10):
   """An artist's most popular tracks as dictionaries"""
   sp = get_client()
-  results = sp.artist_top_tracks(artist["id"], country=country)
+
+  results = sp.search(
+    q=f'artist:{artist["name"]}',
+    type="track",
+    market=country,
+    limit=limit
+  )
+  
+  spotify_tracks = results.get("tracks", {}).get("items", {})
   tracks = []
-  for track in results.get("tracks", [])[:limit]:
+
+  for track in spotify_tracks[:limit]:
     album = track.get("album", {})
     tracks.append({
       "title": track["name"],
@@ -136,7 +129,7 @@ def get_top_tracks(artist, country="US", limit=10):
       "album_id": album.get("id"),
       "album_name": album.get("name"),
     })
-
+  
   return tracks
 
 
