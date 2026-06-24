@@ -7,19 +7,24 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+_client = None
+
 def get_client():
   """Authenticate and return Spotify client"""
 
-  auth_manager = SpotifyClientCredentials(
-    client_id=os.getenv("SPOTIFY_CLIENT_ID"),
-    client_secret=os.getenv("SPOTIFY_CLIENT_SECRET"),
-  )
-  return spotipy.Spotify(
-    auth_manager=auth_manager,
-    requests_timeout=10,
-    retries=0,
-    status_retries=0,
-  )
+  global _client
+  if _client is None:
+    auth_manager = SpotifyClientCredentials(
+      client_id=os.getenv("SPOTIFY_CLIENT_ID"),
+      client_secret=os.getenv("SPOTIFY_CLIENT_SECRET"),
+    )
+    _client = spotipy.Spotify(
+      auth_manager=auth_manager,
+      requests_timeout=10,
+      retries=0,
+      status_retries=0,
+    )
+  return _client
 
 
 def search_artist(song_name, limit=10):
@@ -36,17 +41,21 @@ def search_artist(song_name, limit=10):
     if not exact:
       return None
     
-    artist_ids = []
-    for t in exact:
-      primary_id = t["artists"][0]["id"]
-      if primary_id not in artist_ids:
-        artist_ids.append(primary_id)
+    best = max(exact, key=lambda t: t.get("popularity", 0))
+    artist_id = best["artists"][0]["id"]
+    a = sp.artist(artist_id)
 
-    # full_artists = sp.artists(artist_ids)["artists"]
-    full_artists = [sp.artist(aid) for aid in artist_ids]
-    full_artists.sort(key=lambda a: a.get("popularity", 0), reverse=True)
+    # artist_ids = []
+    # for t in exact:
+    #   primary_id = t["artists"][0]["id"]
+    #   if primary_id not in artist_ids:
+    #     artist_ids.append(primary_id)
 
-    a = full_artists[0]
+    # # full_artists = sp.artists(artist_ids)["artists"]
+    # full_artists = [sp.artist(aid) for aid in artist_ids]
+    # full_artists.sort(key=lambda a: a.get("popularity", 0), reverse=True)
+
+    # a = full_artists[0]
 
     return {
       "name": a["name"],
@@ -55,8 +64,9 @@ def search_artist(song_name, limit=10):
       "genres": a.get("genres", [])
     }
   except SpotifyException as err:
-    if err.http_status == 429:
-      print("Spotify rate limit reached. Try again later.")
+    if err.http_status in (403, 429):
+      reason = "rate limit" if err.http_status == 429 else "access forbidden"
+      print(f"Spotify {reason} for {song_name!r}; skipping it.")
       return None
     raise
 
