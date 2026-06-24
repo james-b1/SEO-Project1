@@ -131,10 +131,10 @@ def get_top_tracks(artist, country="US", limit=10):
     tracks.append({
       "title": track["name"],
       "track_id": track["id"],
-      "popularity": album.get("popularity", 0),
+      "popularity": track.get("popularity", 0),
       "artist_name": artist["name"],
-      "album_id": album["id"],
-      "album_name": album["name"],
+      "album_id": album.get("id"),
+      "album_name": album.get("name"),
     })
 
   return tracks

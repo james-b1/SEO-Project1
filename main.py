@@ -94,7 +94,7 @@ def main():
       result["seed_plays"] = plays
       artists.append(result)
     else:
-      print(f"Could not find a ")otify match for {title!r}; skipping it.
+      print(f"Could not find a spotify match for {title!r}; skipping it.")
 
   # Step 5: Expand each input artist into same-genre collaborators.
   input_ids = {a['id'] for a in artists}

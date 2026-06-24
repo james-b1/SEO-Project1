@@ -10,6 +10,7 @@ __pycache__/
 .pytest_cache/
 
 *.db
+.cache
 .cache/
 .DS_Store
 EOF
