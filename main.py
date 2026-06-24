@@ -1,4 +1,8 @@
-from src.spotify_client import search_artist, get_collaborators, rank_top_tracks
+from src.spotify_client import (
+  search_artist, 
+  get_collaborators, 
+  rank_top_tracks
+)
 from src.genai_client import explain_artist
 from src.database import (
     init_db, write_songs,
@@ -60,7 +64,10 @@ def swap_songs(playlist, candidates):
     album = removed_track['album_id']
     rejected_albums.add(album)
 
-    playlist = [t for t in playlist if t != removed_track]
+    if album:
+      playlist = [t for t in playlist if t.get("album_id") != album]
+    else:
+      playlist = [t for t in playlist if t != removed_track]
 
     on_list = {t['track_id'] for t in playlist}
     for candidate in candidates:
@@ -101,15 +108,20 @@ def main():
   pool = {}
   links = {}
 
+  scores = {}
   for artist in artists:
     for collaborator in get_collaborators(artist): # track collaborators for next step
       cid = collaborator['id']
       if cid not in input_ids:
         pool[cid] = collaborator
         links.setdefault(cid, set()).add(artist["name"])
+        scores[cid] = scores.get(cid, 0) + artist.get("seed_plays", 0)
 
-  recommended = sorted(pool.values(), key=lambda a: a['popularity'], reverse=True)
-  recommended = recommended[:3] # set cap to 3 API calls
+  recommended = sorted(
+    pool.values(), 
+    key=lambda a: (scores.get(a["id"], 0), a.get(["popularity"], 0)),
+    reverse=True
+    )[:3] # set cap to 3 API calls
   write_recommended_artists(recommended)
 
   # Step 6: Get GenAI explanations for each recommended artist
