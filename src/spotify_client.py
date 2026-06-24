@@ -126,7 +126,7 @@ def get_top_tracks(artist, country="US", limit=10):
   sp = get_client()
   results = sp.artist_top_tracks(artist["id"], country=country)
   tracks = []
-  for album in results.get("tracks", [])[:limit]:
+  for track in results.get("tracks", [])[:limit]:
     album = track.get("album", {})
     tracks.append({
       "title": track["name"],
