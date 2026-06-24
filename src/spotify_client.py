@@ -1,9 +1,15 @@
-import spotipy 
+import spotipy
 from spotipy.exceptions import SpotifyException
 from spotipy.oauth2 import SpotifyClientCredentials
 import os
 import time
 from dotenv import load_dotenv
+
+from src.synthetic import (
+  synthetic_artist,
+  synthetic_collaborators,
+  synthetic_top_tracks,
+)
 
 load_dotenv()
 
@@ -45,59 +51,61 @@ def search_artist(song_name, limit=10):
     artist_id = best["artists"][0]["id"]
     a = sp.artist(artist_id)
 
-    # artist_ids = []
-    # for t in exact:
-    #   primary_id = t["artists"][0]["id"]
-    #   if primary_id not in artist_ids:
-    #     artist_ids.append(primary_id)
-
-    # # full_artists = sp.artists(artist_ids)["artists"]
-    # full_artists = [sp.artist(aid) for aid in artist_ids]
-    # full_artists.sort(key=lambda a: a.get("popularity", 0), reverse=True)
-
-    # a = full_artists[0]
-
     return {
       "name": a["name"],
       "id": a["id"],
       "popularity": a.get("popularity", 0),
-      "genres": a.get("genres", [])
+      # Spotify returns [] for dev-mode apps; collaborators no longer rely on it.
+      "genres": a.get("genres", []),
     }
   except SpotifyException as err:
     if err.http_status in (403, 429):
-      reason = "rate limit" if err.http_status == 429 else "access forbidden"
-      print(f"Spotify {reason} for {song_name!r}; skipping it.")
-      return None
+      reason = "rate limited" if err.http_status == 429 else "access forbidden"
+      print(f"Spotify {reason} for {song_name!r}; generating a synthetic match with Gemini.")
+      return synthetic_artist(song_name)
     raise
 
 def get_collaborators(artist, limit=5):
-  """Returns a list of full collaborator artist objects"""
+  """Find real collaborators: other artists credited on this artist's tracks.
+
+  Spotify no longer returns genres for dev-mode apps, so we discover related
+  artists from actual track credits (features) instead of a genre search.
+  Returns up to `limit` collaborators, ranked by how often they appear with
+  this artist. We leave popularity at 0 rather than spend an extra API call per
+  collaborator to fetch it — the playlist itself is still ranked by real track
+  popularity downstream."""
   sp = get_client()
-  genres = artist.get("genres", [])
 
-  if not genres:
-    return []
-  
-  genre = genres[0]
-  results = sp.search(
-    q=f'genre:{genre}',
-    type="artist",
-    limit=limit
-  )
+  try:
+    # Dev-mode Spotify apps reject search `limit` above ~10 with a 400, so keep
+    # it small (matches the other search calls in this module).
+    results = sp.search(
+      q=f'artist:{artist["name"]}',
+      type="track",
+      limit=10,
+    )
+  except SpotifyException as err:
+    if err.http_status in (403, 429):
+      print(f"Spotify unavailable for collaborators of {artist.get('name')!r}; "
+            f"generating synthetic ones with Gemini.")
+      return synthetic_collaborators(artist, limit)
+    raise
 
-  collaborators = []
-  for item in results.get("artists", {}).get("items", []):
-    if item["id"] == artist["id"]:
-      continue
+  counts = {}
+  names = {}
+  for track in results.get("tracks", {}).get("items", []):
+    for credited in track.get("artists", []):
+      cid = credited.get("id")
+      if not cid or cid == artist["id"]:
+        continue
+      counts[cid] = counts.get(cid, 0) + 1
+      names[cid] = credited.get("name")
 
-    collaborators.append({
-      "name": item["name"],
-      "id": item["id"],
-      "popularity": item.get("popularity", 0),
-      "genres": item.get("genres", [])
-    })
-    
-  return collaborators
+  ranked = sorted(counts, key=lambda cid: counts[cid], reverse=True)[:limit]
+  return [
+    {"name": names[cid], "id": cid, "popularity": 0, "genres": []}
+    for cid in ranked
+  ]
 
 
 def same_genre(artist_a, artist_b):
@@ -120,13 +128,20 @@ def get_top_tracks(artist, country="US", limit=10):
   """An artist's most popular tracks as dictionaries"""
   sp = get_client()
 
-  results = sp.search(
-    q=f'artist:{artist["name"]}',
-    type="track",
-    market=country,
-    limit=limit
-  )
-  
+  try:
+    results = sp.search(
+      q=f'artist:{artist["name"]}',
+      type="track",
+      market=country,
+      limit=limit
+    )
+  except SpotifyException as err:
+    if err.http_status in (403, 429):
+      print(f"Spotify unavailable for top tracks of {artist['name']!r}; "
+            f"generating synthetic ones with Gemini.")
+      return synthetic_top_tracks(artist, limit)
+    raise
+
   spotify_tracks = results.get("tracks", {}).get("items", {})
   tracks = []
 

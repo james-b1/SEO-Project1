@@ -46,7 +46,8 @@ def swap_songs(playlist, candidates):
     print("\n Your Playlist:")
 
     for i, track in enumerate(playlist, 1):
-      print(f"{i}. {track['title']} by {track['artist_name']}")
+      tag = " (synthetic)" if track.get("synthetic") else ""
+      print(f"{i}. {track['title']} by {track['artist_name']}{tag}")
 
     choice = input(
       "Number to remove a song or Enter to keep the playlist: "
@@ -138,7 +139,8 @@ def main():
       continue
 
     explanations.append((text, artist['id']))
-    print(f"  {artist['name']}: {text}")
+    tag = " (synthetic)" if artist.get("synthetic") else ""
+    print(f"  {artist['name']}{tag}: {text}")
 
   update_artist_explanations(explanations)
 
@@ -156,7 +158,8 @@ def main():
   # Step 9: Write final playlist to database
   print(f"\nFinal Playlist ({len(playlist)} songs):")
   for i, track in enumerate(playlist, 1):
-    print(f"  {i}. {track['title']} by {track['artist_name']} "
+    tag = " (synthetic)" if track.get("synthetic") else ""
+    print(f"  {i}. {track['title']} by {track['artist_name']}{tag} "
           f"(popularity {track['popularity']})")
 
   # Step 10: Show metrics (genre %, artist %)

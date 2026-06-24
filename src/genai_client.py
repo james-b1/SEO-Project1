@@ -6,7 +6,9 @@ from google.genai import types
 
 load_dotenv()
 
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+client = genai.Client(
+  api_key=os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+)
 
 SYSTEM_PROMPT = (
   "You write very short music recommendations. One or two sentences, "
@@ -27,7 +29,7 @@ def explain_artist(artist, connected_to):
   )
 
   response = client.models.generate_content(
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash",
     contents=user_message,
     config=types.GenerateContentConfig(
         system_instruction=SYSTEM_PROMPT,
