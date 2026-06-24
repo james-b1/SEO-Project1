@@ -88,10 +88,13 @@ def main():
 
   # Step 4: Search Spotify for each song's artist and genre
   artists = []
-  for title, _ in songs:
+  for title, plays in songs:
     result = search_artist(title)
     if result:
+      result["seed_plays"] = plays
       artists.append(result)
+    else:
+      print(f"Could not find a ")otify match for {title!r}; skipping it.
 
   # Step 5: Expand each input artist into same-genre collaborators.
   input_ids = {a['id'] for a in artists}

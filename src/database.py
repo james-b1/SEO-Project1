@@ -182,7 +182,7 @@ def get_metrics():
 
   total = sum(count for _, count in rows)
   if total == 0:
-    return {"artist_breakdown", {}}
+    return {"artist_breakdown": {}}
   
   artist_breakdown = {
     name: round((count / total) * 100, 1)

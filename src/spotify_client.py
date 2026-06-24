@@ -21,9 +21,6 @@ def get_client():
   )
 
 
-
-
-
 def search_artist(song_name, limit=10):
   """Find the most popular artist who released a track with the same
      title as input song. Returns a single artists, dictionaries, or None."""
@@ -124,27 +121,21 @@ def collect_related_artists(artist):
   return filter_by_genre(artist, collaborators)
   
 
-def get_top_tracks(artist, country="US"):
+def get_top_tracks(artist, country="US", limit=10):
   """An artist's most popular tracks as dictionaries"""
   sp = get_client()
-  results = sp.artist_albums(
-    artist["id"], album_type="album", limit=3
-  )
+  results = sp.artist_top_tracks(artist["id"], country=country)
   tracks = []
-  seen = set()
-  for album in results["items"]:
-    time.sleep(0.3)
-    for track in sp.album_tracks(album["id"])["items"]:
-      if track["id"] not in seen:
-        seen.add(track["id"])
-        tracks.append({
-          "title": track["name"],
-          "track_id": track["id"],
-          "popularity": album.get("popularity", 0),
-          "artist_name": artist["name"],
-          "album_id": album["id"],
-          "album_name": album["name"],
-        })
+  for album in results.get("tracks", [])[:limit]:
+    album = track.get("album", {})
+    tracks.append({
+      "title": track["name"],
+      "track_id": track["id"],
+      "popularity": album.get("popularity", 0),
+      "artist_name": artist["name"],
+      "album_id": album["id"],
+      "album_name": album["name"],
+    })
 
   return tracks
 
