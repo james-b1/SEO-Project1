@@ -132,7 +132,7 @@ def main():
     pool.values(), 
     key=lambda a: (scores.get(a["id"], 0), a.get("popularity", 0)),
     reverse=True
-    )[:8] # set cap to 3 API calls
+    )[:5] # set cap to 5 API calls
   write_recommended_artists(recommended)
 
   # Step 6: Get GenAI explanations for each recommended artist
