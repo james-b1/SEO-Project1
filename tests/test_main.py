@@ -34,18 +34,21 @@ def test_parse_songs_keeps_numbers_inside_song_title():
 
 def test_get_playlist_size_defaults_on_empty_input(monkeypatch):
   monkeypatch.setattr("builtins.input", lambda _: "")
-  assert get_playlist_size() == 30
+  assert get_playlist_size() == 10
 
 
 def test_get_playlist_size_defaults_on_invalid_input(monkeypatch):
   monkeypatch.setattr("builtins.input", lambda _: "ab")
-  assert get_playlist_size() == 30
+  assert get_playlist_size() == 10
 
 
 def test_get_playlist_size_accepts_positive_number(monkeypatch):
   monkeypatch.setattr("builtins.input", lambda _: "10")
   assert get_playlist_size() == 10
 
+def test_get_playlist_size_defaults_when_above_limit(monkeypatch):
+  monkeypatch.setattr("builtins.input", lambda _: "51")
+  assert get_playlist_size() == 10
 
 def test_swap_songs_keeps_playlist_when_input_is_enter(monkeypatch):
   playlist = [_track("A", "t1", "Artist", "album1", 90)]

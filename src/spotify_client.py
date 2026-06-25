@@ -127,46 +127,94 @@ def collect_related_artists(artist):
 def get_top_tracks(artist, country="US", limit=10):
   """An artist's most popular tracks as dictionaries"""
   sp = get_client()
+  tracks = []
 
   try:
-    results = sp.search(
-      q=f'artist:{artist["name"]}',
-      type="track",
-      market=country,
-      limit=limit
-    )
+    for offset in range(0, limit, 10):
+      results = sp.search(
+        q=f'artist:{artist["name"]}',
+        type="track",
+        market=country,
+        limit=min(10, limit - offset),
+        offset=offset
+      )
+      spotify_tracks = results.get("tracks", {}).get("items", [])
+
+      for track in spotify_tracks:
+        album = track.get("album", {})
+        tracks.append({
+          "title": track["name"],
+          "track_id": track["id"],
+          "popularity": track.get("popularity", 0),
+          "artist_name": artist["name"],
+          "album_id": album.get("id"),
+          "album_name": album.get("name"),
+        })
+
   except SpotifyException as err:
     if err.http_status in (403, 429):
       print(f"Spotify unavailable for top tracks of {artist['name']!r}; "
-            f"generating synthetic ones with Gemini.")
+            f"generating synthetic ones with GenAI.")
       return synthetic_top_tracks(artist, limit)
     raise
-
-  spotify_tracks = results.get("tracks", {}).get("items", {})
-  tracks = []
-
-  for track in spotify_tracks[:limit]:
-    album = track.get("album", {})
-    tracks.append({
-      "title": track["name"],
-      "track_id": track["id"],
-      "popularity": track.get("popularity", 0),
-      "artist_name": artist["name"],
-      "album_id": album.get("id"),
-      "album_name": album.get("name"),
-    })
   
-  return tracks
+  return tracks[:limit]
 
 
 def rank_top_tracks(artists, limit=10):
-  """Pool every artist's top tracks, dedupe by track, and rank by
-    popularity."""
-  pool = {}
-  for artist in artists:
-    for track in get_top_tracks(artist):
-      pool[track["track_id"]] = track # dedupe
-    
-  ranked = sorted(pool.values(), key=lambda t: t["popularity"], reverse=True)
-  return ranked[:limit]
+  """Rank tracks with soft diversity penalties instead of hard artist caps."""
+  candidates = {}
+  tracks_per_artist = max(1, min(limit, 50))
+
+  for artist_idx, artist in enumerate(artists):
+    artist_bonus = max(0, 30 - (artist_idx * 5))
+
+    for track_idx, track in enumerate(get_top_tracks(artist, limit=tracks_per_artist)):
+      title_key = track["title"].strip().lower()
+      artist_key = track["artist_name"].strip().lower()
+      key = (title_key, artist_key)
+
+      if key in candidates:
+        continue
+
+      popularity = track.get("popularity", 0)
+      if popularity == 0:
+        popularity = max(1, 50 - track_idx)
+
+      track["_base_score"] = popularity + artist_bonus
+      candidates[key] = track
+
+  selected = []
+  artist_counts = {}
+  album_counts = {}
+
+  while candidates and len(selected) < limit:
+    best_key = None
+    best_score = None
+
+    for key, track in candidates.items():
+      artist_name = track["artist_name"]
+      album_id = track.get("album_id")
+
+      score = track["_base_score"]
+      score -= artist_counts.get(artist_name, 0) * 12
+      score -= album_counts.get(album_id, 0) * 8
+
+      if best_score is None or score > best_score:
+        best_score = score
+        best_key = key
+
+    chosen = candidates.pop(best_key)
+    selected.append(chosen)
+
+    artist_name = chosen["artist_name"]
+    album_id = chosen.get("album_id")
+
+    artist_counts[artist_name] = artist_counts.get(artist_name, 0) + 1
+    album_counts[album_id] = album_counts.get(album_id, 0) + 1
+
+  for track in selected:
+    track.pop("_base_score", None)
+
+  return selected
   

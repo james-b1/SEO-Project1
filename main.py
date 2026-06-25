@@ -19,9 +19,19 @@ def get_songs():
   return [input1, input2, input3]
 
 def get_playlist_size():
-  '''Ask how many songs the playlist should have (default 30).'''
-  answer = input("How many songs do you want in your playlist? We default to 30? ")
-  return int(answer) if answer.isdigit() and int(answer) > 0 else 30
+  '''Ask how many songs the playlist should have.'''
+  answer = input("How many songs do you want in your playlist? "
+  "(default 10, max 50) ").strip()
+
+  if not answer:
+    return 10
+
+  if not answer.isdigit():
+    return 10
+
+  size = int(answer)
+  return size if 1 <= size <= 50 else 10
+  
 
 def parse_songs(entries):
   '''Parse a list of "Name, Count" (str) into (title, plays) (tuple)'''
@@ -111,7 +121,7 @@ def main():
 
   scores = {}
   for artist in artists:
-    for collaborator in get_collaborators(artist): # track collaborators for next step
+    for collaborator in get_collaborators(artist, limit=10): # track collaborators for next step
       cid = collaborator['id']
       if cid not in input_ids:
         pool[cid] = collaborator
@@ -122,7 +132,7 @@ def main():
     pool.values(), 
     key=lambda a: (scores.get(a["id"], 0), a.get("popularity", 0)),
     reverse=True
-    )[:3] # set cap to 3 API calls
+    )[:8] # set cap to 3 API calls
   write_recommended_artists(recommended)
 
   # Step 6: Get GenAI explanations for each recommended artist
