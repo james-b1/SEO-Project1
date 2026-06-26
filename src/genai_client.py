@@ -21,17 +21,22 @@ SYSTEM_PROMPT = (
 )
 
 def explain_artist(artist, connected_to):
-  """Return a one or two sentence reason a listener might like this artist."""
+  """Return (explanation, source) for an artist.
+
+  source is which tier produced the text: 'gemini', 'openrouter', or
+  'fallback' (the hard-coded sentence). Lets callers show where each
+  explanation came from."""
   user_message = _build_prompt(artist, connected_to)
+
   text = _try_gemini(user_message)
+  if text and _is_valid(text):
+    return text, "gemini"
 
-  if not text or not _is_valid(text):
-    text = _try_openrouter(user_message)
+  text = _try_openrouter(user_message)
+  if text and _is_valid(text):
+    return text, "openrouter"
 
-  if not text or not _is_valid(text):
-    return _fallback_explanation(artist, connected_to)
-
-  return text
+  return _fallback_explanation(artist, connected_to), "fallback"
 
 def _try_gemini(user_message):
   """Call Gemini, returns _try_gemini(user_message)"""
@@ -41,8 +46,12 @@ def _try_gemini(user_message):
     contents=user_message,
     config=types.GenerateContentConfig(
       system_instruction=SYSTEM_PROMPT,
-      max_output_tokens=35,
+      # gemini-2.5-flash thinks by default and would spend this whole budget on
+      # hidden reasoning, returning empty visible text. Disable thinking and
+      # give the answer real room so it isn't starved.
+      max_output_tokens=100,
       temperature=0.4,
+      thinking_config=types.ThinkingConfig(thinking_budget=0),
       ),
     )
     text = (response.text or "").strip()

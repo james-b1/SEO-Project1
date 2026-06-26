@@ -68,7 +68,7 @@ synthetic._generate_json = _fake_generate
 
 
 # 3) Skip the live Gemini blurb call and the interactive prompts.
-main.explain_artist = lambda artist, connected_to: "A canned blurb (live Gemini skipped in the demo)."
+main.explain_artist = lambda artist, connected_to: ("A canned blurb (live Gemini skipped in the demo).", "stub")
 main.get_songs = lambda: ["Views 500", "Goodbyes 400", "Congratulations 300"]
 main.get_playlist_size = lambda: 8
 main.swap_songs = lambda playlist, candidates: playlist  # skip interactive removal

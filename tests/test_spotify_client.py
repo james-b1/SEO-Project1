@@ -134,7 +134,7 @@ def test_get_top_tracks_uses_search_results(monkeypatch):
 
 
 def test_rank_top_tracks_dedupes_and_sorts(monkeypatch):
-  def fake_get_top_tracks(artist):
+  def fake_get_top_tracks(artist, limit=None):
     if artist["name"] == "Artist A":
       return[
         {

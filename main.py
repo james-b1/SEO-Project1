@@ -143,13 +143,14 @@ def main():
     connected_to = sorted(links.get(artist['id'], []))
 
     try:
-      text = explain_artist(artist, connected_to)
+      text, source = explain_artist(artist, connected_to)
     except Exception as err:
       print(f"  (skipped {artist['name']}: {err})")
       continue
 
     explanations.append((text, artist['id']))
     tag = " (synthetic)" if artist.get("synthetic") else ""
+    # print(f"  {artist['name']}{tag} [{source}]: {text}")  # uncomment to show LLM source
     print(f"  {artist['name']}{tag}: {text}")
 
   update_artist_explanations(explanations)
@@ -169,8 +170,11 @@ def main():
   print(f"\nFinal Playlist ({len(playlist)} songs):")
   for i, track in enumerate(playlist, 1):
     tag = " (synthetic)" if track.get("synthetic") else ""
-    print(f"  {i}. {track['title']} by {track['artist_name']}{tag} "
-          f"(popularity {track['popularity']})")
+    # Spotify strips track popularity for dev-mode apps (shows 0); only print it
+    # when it's real.
+    pop = track.get("popularity", 0)
+    pop_note = f" (popularity {pop})" if pop else ""
+    print(f"  {i}. {track['title']} by {track['artist_name']}{tag}{pop_note}")
 
   # Step 10: Show metrics (genre %, artist %)
   metrics = get_metrics()
