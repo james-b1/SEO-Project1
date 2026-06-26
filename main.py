@@ -9,13 +9,15 @@ from src.database import (
     write_recommended_artists, update_artist_explanations,
     write_playlist, clear_playlist, get_metrics
 )
+from src import display
 
 def get_songs():
   '''Prompt for top 3 songs and play counts'''
-  print("\nAnswer in this format: [Song Name] [Number of Plays]")
-  input1 = input("What is your most played song? ")
-  input2 = input("What is your 2nd most played song? ")
-  input3 = input("What is your 3rd most played song? ")
+  display.header("YOUR TOP SONGS")
+  print(display.c("Answer in this format: [Song Name] [Number of Plays]", "dim"))
+  input1 = input("What is your most played song?        ")
+  input2 = input("What is your 2nd most played song?    ")
+  input3 = input("What is your 3rd most played song?    ")
   return [input1, input2, input3]
 
 def get_playlist_size():
@@ -53,11 +55,13 @@ def swap_songs(playlist, candidates):
   rejected_albums = set()
 
   while True:
-    print("\n Your Playlist:")
+    display.header("YOUR PLAYLIST")
 
     for i, track in enumerate(playlist, 1):
-      tag = " (synthetic)" if track.get("synthetic") else ""
-      print(f"{i}. {track['title']} by {track['artist_name']}{tag}")
+      tag = display.c(" (synthetic)", "yellow") if track.get("synthetic") else ""
+      name = display.c(track['artist_name'], "green")
+      num = display.c(f"{i:>2}.", "dim")
+      print(f"{num} {track['title']} by {name}{tag}")
 
     choice = input(
       "Number to remove a song or Enter to keep the playlist: "
@@ -94,6 +98,7 @@ def swap_songs(playlist, candidates):
 def main():
   """Run PyTunes CLI"""
   init_db()
+  display.banner()
 
   # Step 1: Get songs from user
   inputs = get_songs()
@@ -136,7 +141,7 @@ def main():
   write_recommended_artists(recommended)
 
   # Step 6: Get GenAI explanations for each recommended artist
-  print("\n Recommended Artists: ")
+  display.header("RECOMMENDED ARTISTS")
 
   explanations = []
   for artist in recommended:
@@ -149,13 +154,15 @@ def main():
       continue
 
     explanations.append((text, artist['id']))
-    tag = " (synthetic)" if artist.get("synthetic") else ""
-    # print(f"  {artist['name']}{tag} [{source}]: {text}")  # uncomment to show LLM source
-    print(f"  {artist['name']}{tag}: {text}")
+    tag = display.c(" (synthetic)", "yellow") if artist.get("synthetic") else ""
+    name = display.c(artist['name'], "bold", "green")
+    # print(f"  {name}{tag} [{source}]: {text}")  # uncomment to show LLM source
+    print(f"  {name}{tag}: {text}")
 
   update_artist_explanations(explanations)
 
   # Step 7: Build the playlist
+  display.header("BUILD YOUR PLAYLIST")
   size = get_playlist_size()
   candidates = rank_top_tracks(recommended, limit=(size*2))
   playlist = candidates[:size]
@@ -167,24 +174,27 @@ def main():
   write_playlist(playlist)
 
   # Step 9: Write final playlist to database
-  print(f"\nFinal Playlist ({len(playlist)} songs):")
+  display.header(f"FINAL PLAYLIST ({len(playlist)} songs)")
   for i, track in enumerate(playlist, 1):
-    tag = " (synthetic)" if track.get("synthetic") else ""
+    tag = display.c(" (synthetic)", "yellow") if track.get("synthetic") else ""
+    name = display.c(track['artist_name'], "green")
+    num = display.c(f"{i:>2}.", "dim")
     # Spotify strips track popularity for dev-mode apps (shows 0); only print it
     # when it's real.
     pop = track.get("popularity", 0)
-    pop_note = f" (popularity {pop})" if pop else ""
-    print(f"  {i}. {track['title']} by {track['artist_name']}{tag}{pop_note}")
+    pop_note = display.c(f" (popularity {pop})", "dim") if pop else ""
+    print(f"  {num} {track['title']} by {name}{tag}{pop_note}")
 
-  # Step 10: Show metrics (genre %, artist %)
+  # Step 10: Show metrics (artist %)
   metrics = get_metrics()
   breakdown = metrics.get("artist_breakdown", {})
   if breakdown:
-    print("")
+    display.header("YOUR MIX")
     for artist_name, pct in sorted(
       breakdown.items(), key=lambda x: x[1], reverse=True
     ):
-      print(f"  {artist_name}: {pct}%")
+      pct_str = display.c(f"{pct}%", "magenta")
+      print(f"  {artist_name}: {pct_str}")
 
 
 if __name__ == "__main__":
