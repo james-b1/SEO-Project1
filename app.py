@@ -115,3 +115,80 @@ def remove_track(state, index):
     on_list.add(candidate['track_id'])
 
   state["playlist"] = playlist
+
+
+@app.route("/")
+def index():
+  return render_template("index.html")
+
+
+@app.route("/create", methods=["GET", "POST"])
+def create():
+  if request.method == "POST":
+    songs = []
+    for i in (1, 2, 3):
+      title = request.form.get(f"song{i}", "").strip()
+      plays_raw = request.form.get(f"plays{i}", "").strip()
+      plays = int(plays_raw) if plays_raw.isdigit() else 0
+      if title:
+        songs.append((title, plays))
+
+    if len(songs) < 3:
+      flash("Please enter all three songs.")
+      return redirect(url_for("create"))
+
+    size_raw = request.form.get("size", "").strip()
+    size = int(size_raw) if size_raw.isdigit() and 1 <= int(size_raw) <= 50 else 10
+
+    write_songs(songs)
+    state, missing = build_recommendations(songs, size)
+    for title in missing:
+      flash(f"Could not find a Spotify match for {title!r}; skipped it.")
+    return redirect(url_for("create"))
+
+  return render_template("create.html", state=get_state())
+
+
+@app.route("/remove/<int:index>", methods=["POST"])
+def remove(index):
+  state = get_state()
+  if state and 0 <= index < len(state["playlist"]):
+    remove_track(state, index)
+  return redirect(url_for("create"))
+
+
+@app.route("/finalize", methods=["POST"])
+def finalize():
+  state = get_state()
+  if not state or not state["playlist"]:
+    flash("Build a playlist first.")
+    return redirect(url_for("create"))
+
+  clear_playlist()
+  write_playlist(state["playlist"])
+  SESSIONS.pop(session.pop("key", None), None)   # done with this session
+  return redirect(url_for("results"))
+
+
+@app.route("/restart", methods=["POST"])
+def restart():
+  SESSIONS.pop(session.pop("key", None), None)
+  return redirect(url_for("create"))
+
+
+@app.route("/results")
+def results():
+  playlist = get_playlist()
+  if not playlist:
+    flash("No playlist yet — build one first.")
+    return redirect(url_for("create"))
+
+  breakdown = sorted(
+    get_metrics().get("artist_breakdown", {}).items(),
+    key=lambda x: x[1], reverse=True,
+  )
+  return render_template("results.html", playlist=playlist, breakdown=breakdown)
+
+
+if __name__ == "__main__":
+  app.run(debug=True)
