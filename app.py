@@ -73,7 +73,7 @@ def build_recommendations(songs, size):
       text = explain_artist(artist, connected_to)
     except Exception:
       text = None
-    artist["explanation"] = text          # template reads this
+    artist["explanation"] = text
     if text:
       explanations.append((text, artist['id']))
   update_artist_explanations(explanations)
@@ -89,3 +89,29 @@ def build_recommendations(songs, size):
     "rejected_albums": set(),
   })
   return state, missing
+
+
+def remove_track(state, index):
+  '''Dropping a song also drops same-album siblings, then refills
+     from the candidate pool, skipping rejected albums.'''
+  playlist = state["playlist"]
+  removed = playlist[index]
+  album = removed.get("album_id")
+  state["rejected_albums"].add(album)
+
+  if album:
+    playlist = [t for t in playlist if t.get("album_id") != album]
+  else:
+    playlist = [t for t in playlist if t != removed]
+
+  on_list = {t['track_id'] for t in playlist}
+  for candidate in state["candidates"]:
+    if len(playlist) >= state["size"]:
+      break
+    if candidate["album_id"] in state["rejected_albums"] \
+        or candidate["track_id"] in on_list:
+      continue
+    playlist.append(candidate)
+    on_list.add(candidate['track_id'])
+
+  state["playlist"] = playlist
