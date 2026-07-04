@@ -1,10 +1,23 @@
 {% extends "base.html" %}
 {% block content %}
 {% if not state %}
+  {% if not count %}
 <section class="panel">
-  <h2>Your Top 3 Songs</h2>
+  <h2>How many songs will you enter?</h2>
+  <form method="get" action="{{ url_for('create') }}">
+    <div class="song-row">
+      <label>Songs</label>
+      <input type="number" name="count" value="3" min="1" max="5" required autofocus>
+    </div>
+    <button type="submit" class="btn">Next</button>
+  </form>
+</section>
+
+  {% else %}
+<section class="panel">
+  <h2>Your Top {{ count }} Song{{ 's' if count > 1 else '' }}</h2>
   <form method="post" action="{{ url_for('create') }}">
-    {% for i in [1, 2, 3] %}
+    {% for i in range(1, count + 1) %}
     <div class="song-row">
       <label>#{{ i }}</label>
       <input type="text" name="song{{ i }}" placeholder="Song name" required>
@@ -18,6 +31,7 @@
     <button type="submit" class="btn">Build my playlist</button>
   </form>
 </section>
+  {% endif %}
 
 {% else %}
 <section class="panel">

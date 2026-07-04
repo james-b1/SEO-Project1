@@ -64,6 +64,10 @@ def build_recommendations(songs, size):
     key=lambda a: (scores.get(a["id"], 0), a.get("popularity", 0)),
     reverse=True
   )[:5]
+
+  if not recommended:
+        return None, missing
+
   write_recommended_artists(recommended)
 
   explanations = []
@@ -79,6 +83,9 @@ def build_recommendations(songs, size):
   update_artist_explanations(explanations)
 
   candidates = rank_top_tracks(recommended, limit=(size * 2))
+
+  if not candidates:
+    return None, missing
 
   state = new_state()
   state.update({
@@ -126,15 +133,15 @@ def index():
 def create():
   if request.method == "POST":
     songs = []
-    for i in (1, 2, 3):
+    for i in range(1, 6):
       title = request.form.get(f"song{i}", "").strip()
       plays_raw = request.form.get(f"plays{i}", "").strip()
       plays = int(plays_raw) if plays_raw.isdigit() else 0
       if title:
         songs.append((title, plays))
 
-    if len(songs) < 3:
-      flash("Please enter all three songs.")
+    if not songs:
+      flash("Please enter at least one song.")
       return redirect(url_for("create"))
 
     size_raw = request.form.get("size", "").strip()
@@ -144,9 +151,13 @@ def create():
     state, missing = build_recommendations(songs, size)
     for title in missing:
       flash(f"Could not find a Spotify match for {title!r}; skipped it.")
+    if state is None:
+      flash("Couldn't build any recommendations — try again or use different songs.")
     return redirect(url_for("create"))
 
-  return render_template("create.html", state=get_state())
+  count_raw = request.args.get("count", "").strip()
+  count = int(count_raw) if count_raw.isdigit() and 1 <= int(count_raw) <= 5 else None
+  return render_template("create.html", state=get_state(), count=count)
 
 
 @app.route("/remove/<int:index>", methods=["POST"])
