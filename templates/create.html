@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+{% if not state %}
+<section class="panel">
+  <h2>Your Top 3 Songs</h2>
+  <form method="post" action="{{ url_for('create') }}">
+    {% for i in [1, 2, 3] %}
+    <div class="song-row">
+      <label>#{{ i }}</label>
+      <input type="text" name="song{{ i }}" placeholder="Song name" required>
+      <input type="number" name="plays{{ i }}" placeholder="Plays" min="0">
+    </div>
+    {% endfor %}
+    <div class="song-row">
+      <label>Size</label>
+      <input type="number" name="size" value="10" min="1" max="50">
+    </div>
+    <button type="submit" class="btn">Build my playlist</button>
+  </form>
+</section>
+
+{% else %}
+<section class="panel">
+  <h2>Recommended Artists</h2>
+  <ul>
+    {% for artist in state.recommended %}
+    <li>
+      <strong>{{ artist.name }}</strong>
+      {% if artist.explanation %} — {{ artist.explanation }}{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section class="panel">
+  <h2>Your Playlist</h2>
+  <ol class="track-list">
+    {% for track in state.playlist %}
+    <li>
+      {{ track.title }} by {{ track.artist_name }}
+      <form method="post" action="{{ url_for('remove', index=loop.index0) }}">
+        <button type="submit" class="btn-remove">✕</button>
+      </form>
+    </li>
+    {% endfor %}
+  </ol>
+  <form method="post" action="{{ url_for('finalize') }}">
+    <button type="submit" class="btn">Finalize playlist</button>
+  </form>
+  <form method="post" action="{{ url_for('restart') }}">
+    <button type="submit" class="btn-secondary">Start over</button>
+  </form>
+</section>
+{% endif %}
+{% endblock %}

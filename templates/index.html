@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <h1>PyTunes</h1>
+  <p>Tell us your three most played songs and PyTunes builds you a playlist:
+     Spotify finds artists you'll love, AI explains why they fit, and you
+     fine-tune the result until it's yours.</p>
+  <a href="{{ url_for('create') }}" class="btn">Start</a>
+</section>
+{% endblock %}
