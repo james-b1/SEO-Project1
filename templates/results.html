@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="panel">
+  <h2>Final Playlist ({{ playlist|length }} songs)</h2>
+  <ol>
+    {% for track in playlist %}
+    <li>{{ track.title }} by {{ track.artist_name }} (popularity {{ track.popularity }})</li>
+    {% endfor %}
+  </ol>
+</section>
+
+<section class="panel">
+  <h2>Artist Breakdown</h2>
+  <ul class="metrics">
+    {% for name, pct in breakdown %}
+    <li>
+      {{ name }}
+      <span class="bar" style="width: {{ pct }}%"></span>
+      {{ pct }}%
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+
+<form method="post" action="{{ url_for('restart') }}">
+  <button type="submit" class="btn">Make another playlist</button>
+</form>
+{% endblock %}
