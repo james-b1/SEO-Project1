@@ -1,8 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
 <section class="hero">
+  <img src="{{ url_for('static', filename='logo.svg') }}" alt="PyTunes logo" class="hero-logo">
   <h1>PyTunes</h1>
-  <p>Tell us your three most played songs and PyTunes builds you a playlist:
+  <p>Tell us your favorite songs (up to five) and PyTunes builds you a playlist:
      Spotify finds artists you'll love, AI explains why they fit, and you
      fine-tune the result until it's yours.</p>
   <a href="{{ url_for('create') }}" class="btn">Start</a>

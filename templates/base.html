@@ -3,11 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <title>{% block title %}PyTunes{% endblock %}</title>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='logo.svg') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
   <header class="topbar">
-    <a href="{{ url_for('index') }}" class="brand">🎵 PyTunes</a>
+    <a href="{{ url_for('index') }}" class="brand">
+      <img src="{{ url_for('static', filename='logo.svg') }}" alt="" class="brand-logo">
+      PyTunes
+    </a>
   </header>
   <main class="container">
     {% with messages = get_flashed_messages() %}
