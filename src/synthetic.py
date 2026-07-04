@@ -3,6 +3,7 @@
 import json
 import os
 import re
+import time
 
 from dotenv import load_dotenv
 from google import genai
@@ -10,7 +11,7 @@ from google.genai import types
 
 load_dotenv()
 
-MODEL = "gemini-2.5-flash"
+MODEL = "gemini-2.5-flash-lite"
 
 _client = None
 
@@ -25,7 +26,7 @@ def _get_client():
   return _client
 
 
-def _generate_json(prompt):
+def _generate_json(prompt, retries=1):
   """Ask Gemini for a JSON object. Returns the parsed value, or None on failure."""
   try:
     response = _get_client().models.generate_content(
@@ -33,12 +34,21 @@ def _generate_json(prompt):
       contents=prompt,
       config=types.GenerateContentConfig(
         response_mime_type="application/json",
-        max_output_tokens=1024,
+        max_output_tokens=4096,
+        thinking_config=types.ThinkingConfig(thinking_budget=0),
       ),
     )
     text = (response.text or "").strip()
     return json.loads(text) if text else None
-  except Exception as err:  # network error, bad JSON, etc. — degrade gracefully
+  except Exception as err:
+    message = str(err)
+    retriable = "RESOURCE_EXHAUSTED" in message or "UNAVAILABLE" in message
+    if retriable and retries > 0:
+      match = re.search(r"retry in (\d+(?:\.\d+)?)s", message)
+      delay = float(match.group(1)) + 1 if match else 15
+      print(f"  (Gemini rate limited; retrying in {delay:.0f}s)")
+      time.sleep(delay)
+      return _generate_json(prompt, retries - 1)
     print(f"  (synthetic generation failed: {err})")
     return None
 
