@@ -3,9 +3,8 @@
 <section class="hero">
   <img src="{{ url_for('static', filename='logo.svg') }}" alt="PyTunes logo" class="hero-logo">
   <h1>PyTunes</h1>
-  <p>Tell us your favorite songs (up to five) and PyTunes builds you a playlist:
-     Spotify finds artists you'll love, AI explains why they fit, and you
-     fine-tune the result until it's yours.</p>
-  <a href="{{ url_for('create') }}" class="btn">Start</a>
+  <p class="tagline">Your next favorite playlist, built from the songs
+     you already love.</p>
+  <a href="{{ url_for('create') }}" class="btn btn-big">Start</a>
 </section>
 {% endblock %}
