@@ -108,6 +108,7 @@ def main():
   artists = []
   for title, plays in songs:
     result = search_artist(title)
+    print(result['images'])
     if result:
       result["seed_plays"] = plays
       artists.append(result)
@@ -150,7 +151,7 @@ def main():
 
     explanations.append((text, artist['id']))
     tag = " (synthetic)" if artist.get("synthetic") else ""
-    print(f"  {artist['name']}{tag}: {text}")
+    print(f"  {artist['image']} {artist['name']}{tag}: {text}")
 
   update_artist_explanations(explanations)
 

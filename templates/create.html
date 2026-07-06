@@ -39,6 +39,7 @@
   <ul>
     {% for artist in state.recommended %}
     <li>
+      <img src="{{ artist.image }}">
       <strong>{{ artist.name }}</strong>
       {% if artist.explanation %} — {{ artist.explanation }}{% endif %}
     </li>
@@ -51,6 +52,7 @@
   <ol class="track-list">
     {% for track in state.playlist %}
     <li>
+      <img src="{{ track.images }}">
       {{ track.title }} by {{ track.artist_name }}
       <form method="post" action="{{ url_for('remove', index=loop.index0) }}">
         <button type="submit" class="btn-remove">✕</button>

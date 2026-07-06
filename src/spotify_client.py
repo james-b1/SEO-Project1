@@ -57,7 +57,9 @@ def search_artist(song_name, limit=10):
       "popularity": a.get("popularity", 0),
       # Spotify returns [] for dev-mode apps; collaborators no longer rely on it.
       "genres": a.get("genres", []),
+      "images": a["images"][0]["url"]
     }
+  
   except SpotifyException as err:
     if err.http_status in (403, 429):
       reason = "rate limited" if err.http_status == 429 else "access forbidden"
@@ -93,17 +95,23 @@ def get_collaborators(artist, limit=5):
 
   counts = {}
   names = {}
+  images = {}
   for track in results.get("tracks", {}).get("items", []):
     for credited in track.get("artists", []):
       cid = credited.get("id")
+      a = sp.artist(cid)
+      
+      
       if not cid or cid == artist["id"]:
         continue
       counts[cid] = counts.get(cid, 0) + 1
+      images[cid] = a["images"][0]["url"]
       names[cid] = credited.get("name")
 
   ranked = sorted(counts, key=lambda cid: counts[cid], reverse=True)[:limit]
   return [
-    {"name": names[cid], "id": cid, "popularity": 0, "genres": []}
+    {"name": names[cid], "id": cid, "popularity": 0, "genres": [], 'image': images[cid]
+     }
     for cid in ranked
   ]
 
@@ -149,6 +157,8 @@ def get_top_tracks(artist, country="US", limit=10):
           "artist_name": artist["name"],
           "album_id": album.get("id"),
           "album_name": album.get("name"),
+          #tracks > items > albums > images
+          "images": album['images'][0]['url']
         })
 
   except SpotifyException as err:
