@@ -36,12 +36,15 @@
 {% else %}
 <section class="panel">
   <h2>Recommended Artists</h2>
-  <ul>
+  <ul class="artist-list">
     {% for artist in state.recommended %}
-    <li>
-      <img src="{{ artist.image }}">
-      <strong>{{ artist.name }}</strong>
-      {% if artist.explanation %} — {{ artist.explanation }}{% endif %}
+    <li class="artist-card">
+      <img src="{{ artist.image or url_for('static', filename='logo.svg') }}"
+           alt="" class="artist-avatar">
+      <div>
+        <strong>{{ artist.name }}</strong>
+        {% if artist.explanation %}<p>{{ artist.explanation }}</p>{% endif %}
+      </div>
     </li>
     {% endfor %}
   </ul>
@@ -52,8 +55,9 @@
   <ol class="track-list">
     {% for track in state.playlist %}
     <li>
-      <img src="{{ track.images }}">
-      {{ track.title }} by {{ track.artist_name }}
+      <img src="{{ track.images or url_for('static', filename='logo.svg') }}"
+           alt="" class="track-art">
+      <span class="track-name">{{ track.title }} by {{ track.artist_name }}</span>
       <form method="post" action="{{ url_for('remove', index=loop.index0) }}">
         <button type="submit" class="btn-remove">✕</button>
       </form>
