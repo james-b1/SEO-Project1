@@ -18,13 +18,14 @@ def _artist(name, spotify_id, genres, popularity):
     "popularity": popularity
   }
 
-def _track(title, track_id, artist_name, album_id, popularity):
+def _track(title, track_id, artist_name, album_id, popularity, images=None):
   return {
     "title": title,
     "track_id": track_id,
     "artist_name": artist_name,
     "album_id": album_id,
-    "popularity": popularity
+    "popularity": popularity,
+    "images": images
   }
 
 
@@ -144,7 +145,16 @@ def test_playlist_ignores_duplicate_track_ids(db):
   assert len(rows) == 1
   assert rows[0]["title"] == "First"
 
-
+def test_playlist_round_trips_images(db):
+  db.write_playlist([
+    _track("With Art", "track1", "Artist A", "album1", 90,
+           images="https://example.com/art.jpg"),
+    _track("No Art", "track2", "Artist B", "album2", 80),
+  ])
+  rows = {row["track_id"]: row for row in db.get_playlist()}
+  assert rows["track1"]["images"] == "https://example.com/art.jpg"
+  assert rows["track2"]["images"] is None
+  
 def test_clear_playlist(db):
   db.write_playlist([
     _track("Track A", "track1", "Artist A", "album1", 90)

@@ -33,6 +33,7 @@ def init_db():
       artist_name TEXT NOT NULL,
       album_id TEXT,
       popularity INTEGER,
+      images TEXT,
       added_at TEXT DEFAULT CURRENT_TIMESTAMP
     );
   """)
@@ -129,15 +130,15 @@ def write_playlist(tracks):
   cursor = connection.cursor()
 
   rows = [
-    (t["title"], t["track_id"], t["artist_name"], t["album_id"], t["popularity"])
+    (t["title"], t["track_id"], t["artist_name"], t["album_id"], t["popularity"], t.get('images'))
     for t in tracks
   ]
 
   cursor.executemany(
     """
     INSERT or IGNORE INTO playlist_entries
-      (title, track_id, artist_name, album_id, popularity)
-    VALUES (?, ?, ?, ?, ?)
+      (title, track_id, artist_name, album_id, popularity, images)
+    VALUES (?, ?, ?, ?, ?, ?)
     """,
     rows,
     )
@@ -149,15 +150,15 @@ def get_playlist():
   cursor = connection.cursor()
 
   cursor.execute(
-    "SELECT title, track_id, artist_name, album_id, popularity "
+    "SELECT title, track_id, artist_name, album_id, popularity, images "
     "FROM playlist_entries ORDER BY popularity DESC"
   )
   rows = cursor.fetchall()
   connection.close()
   return [
     {"title": title, "track_id": track_id, "artist_name": artist_name,
-     "album_id":album_id, "popularity": popularity}
-     for (title, track_id, artist_name, album_id, popularity) in rows
+     "album_id":album_id, "popularity": popularity, "images": images}
+     for (title, track_id, artist_name, album_id, popularity, images) in rows
   ]
 
 def clear_playlist():
