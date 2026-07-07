@@ -15,20 +15,145 @@ body { margin: 0; background: #121212; color: #f5f5f5;
 .tagline { color: #a7a7a7; font-size: 1.2rem; max-width: 440px; margin: 0 auto 36px; }
 .btn-big { padding: 16px 56px; font-size: 1.2rem; }
 .panel { background: #1e1e1e; border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+.panel form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
 .flash { color: #f1b0b7; }
-.song-row { display: flex; gap: 12px; margin-bottom: 12px; align-items: center; }
-input { background: #2a2a2a; color: #f5f5f5; border: 1px solid #3a3a3a;
-        border-radius: 8px; padding: 10px 12px; }
+#song-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.song-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    animation: slideIn 0.3s ease;
+}
+@keyframes slideIn {
+    from { transform: translateY(-5px); }
+    to { transform: translateY(0); }
+}
+
+.row-num {
+    color: #a7a7a7;
+    font-weight: 600;
+    width: 24px;
+    text-align: right;
+    font-size: 0.9rem;
+}
+
+input { 
+    background: #242424; 
+    color: #f5f5f5; 
+    border: 1px solid transparent;
+    border-radius: 8px; 
+    padding: 12px 16px; 
+    transition: all 0.2s ease;
+}
+
+/* Song should get most space */
+input[name="song"] {
+    flex: 1
+}
+
+/* Plays less space */
+input[name="plays"] {
+    width: 80px;
+}
+
+input:hover {
+    background: #2a2a2a;
+}
+
+input:focus {
+    outline: none;
+    border: 1px solid #727272;
+    background: #2a2a2a;
+}
+
 .btn { background: #1db954; color: #003311; border: none; border-radius: 999px;
        padding: 10px 24px; font-weight: 600; cursor: pointer;
        text-decoration: none; display: inline-block;
        transition: background 0.15s, transform 0.15s; }
+
 .btn:hover { background: #1ed760; transform: translateY(-1px); }
 .btn-secondary { background: #2a2a2a; color: #f5f5f5; border: none;
-                 border-radius: 999px; padding: 10px 24px; cursor: pointer; }
-.btn-remove { background: none; border: none; color: #e35d6a; cursor: pointer; }
+                 border-radius: 999px; padding: 10px 24px; cursor: pointer;
+                 font-weight: 600; text-decoration: none; display: inline-block; }
+.btn-secondary:hover { background: #3a3a3a; }
+
+.panel-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid #2a2a2a;
+}
+
+.btn-remove {
+    background: none;
+    border: none;
+    color: #757575;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.btn-remove:hover {
+    color: #e35d6a;
+}
+
+.btn-add-song {
+    background: transparent;
+    color: #a7a7a7;
+    border: none;
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 8px 0;
+    text-align: left;
+    width: max-content;
+    transition: color 0.2s ease;
+}
+
+.btn-add-song:hover {
+    color: #ffffff;
+}
+
+.action-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 16px;
+    padding: 24px;
+    border-top: 1px solid #2a2a2a;
+}
+
+.size-control {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #a7a7a7;
+    font-weight: 600;
+    font-size: 0.9rem;
+    
+}
+
+.size-control input {
+    width: 60px;
+    padding: 8px 12px;
+    text-align: center;
+}
+
 .track-list li { display: flex; align-items: center; gap: 12px;
-                 padding: 8px 0; border-bottom: 1px solid #2a2a2a; }
+                 padding: 8px 0; }
 .track-name { flex: 1; }
 .track-art { width: 28px; height: 28px; border-radius: 6px; object-fit: cover; }
 .artist-list { list-style: none; padding: 0; margin: 0; }

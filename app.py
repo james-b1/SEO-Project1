@@ -133,12 +133,15 @@ def index():
 def create():
   if request.method == "POST":
     songs = []
-    for i in range(1, 6):
-      title = request.form.get(f"song{i}", "").strip()
-      plays_raw = request.form.get(f"plays{i}", "").strip()
+    titles = request.form.getlist("song")
+    plays_list = request.form.getlist("plays")
+    for title, plays_raw in zip(titles, plays_list):
+      title = title.strip()
+      plays_raw = plays_raw.strip()
       plays = int(plays_raw) if plays_raw.isdigit() else 0
       if title:
         songs.append((title, plays))
+    songs = songs[:5]
 
     if not songs:
       flash("Please enter at least one song.")
@@ -155,9 +158,7 @@ def create():
       flash("Couldn't build any recommendations — try again or use different songs.")
     return redirect(url_for("create"))
 
-  count_raw = request.args.get("count", "").strip()
-  count = int(count_raw) if count_raw.isdigit() and 1 <= int(count_raw) <= 5 else None
-  return render_template("create.html", state=get_state(), count=count)
+  return render_template("create.html", state=get_state())
 
 
 @app.route("/remove/<int:index>", methods=["POST"])
