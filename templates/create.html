@@ -1,37 +1,60 @@
 {% extends "base.html" %}
 {% block content %}
 {% if not state %}
-  {% if not count %}
 <section class="panel">
-  <h2>How many songs will you enter?</h2>
-  <form method="get" action="{{ url_for('create') }}">
-    <div class="song-row">
-      <label>Songs</label>
-      <input type="number" name="count" value="3" min="1" max="5" required autofocus>
+  <h2>Your Top Songs</h2>
+  <form method="post" action="{{ url_for('create') }}">
+    <div id="song-rows">
+      {% for i in range(1, 4) %}
+      <div class="song-row">
+        <label class="row-num">#{{ i }}</label>
+        <input type="text" name="song" placeholder="Song name"{% if i == 1 %} autofocus{% endif %}>
+        <input type="number" name="plays" placeholder="Plays" min="0">
+        <button type="button" class="btn-remove" onclick="removeRow(this)">✕</button>
+      </div>
+      {% endfor %}
     </div>
-    <button type="submit" class="btn">Next</button>
+    <button type="button" id="add-song" class="btn-add-song" onclick="addRow()">+ Add song</button>
+    <div class="action-bar">
+        <div class="size-control">
+            <label>Playlist Size</label>
+            <input type="number" name="size" value="10" min="1" max="50">
+        </div>
+        <button type="submit" class="btn">Build my playlist</button>
+    </div>
   </form>
 </section>
 
-  {% else %}
-<section class="panel">
-  <h2>Your Top {{ count }} Song{{ 's' if count > 1 else '' }}</h2>
-  <form method="post" action="{{ url_for('create') }}">
-    {% for i in range(1, count + 1) %}
-    <div class="song-row">
-      <label>#{{ i }}</label>
-      <input type="text" name="song{{ i }}" placeholder="Song name" required>
-      <input type="number" name="plays{{ i }}" placeholder="Plays" min="0">
-    </div>
-    {% endfor %}
-    <div class="song-row">
-      <label>Size</label>
-      <input type="number" name="size" value="10" min="1" max="50">
-    </div>
-    <button type="submit" class="btn">Build my playlist</button>
-  </form>
-</section>
-  {% endif %}
+<script>
+  var MAX_ROWS = 5;
+  var rows = document.getElementById("song-rows");
+  var addBtn = document.getElementById("add-song");
+
+  function renumber() {
+    var labels = rows.querySelectorAll(".row-num");
+    labels.forEach(function (label, i) { label.textContent = "#" + (i + 1); });
+    addBtn.disabled = rows.children.length >= MAX_ROWS;
+  }
+
+  function addRow() {
+    if (rows.children.length >= MAX_ROWS) return;
+    var row = rows.children[0].cloneNode(true);
+    row.querySelectorAll("input").forEach(function (input) {
+      input.value = "";
+      input.removeAttribute("autofocus");
+    });
+    rows.appendChild(row);
+    renumber();
+  }
+
+  function removeRow(btn) {
+    if (rows.children.length <= 1) return;
+    btn.closest(".song-row").remove();
+    renumber();
+  }
+
+  renumber();
+</script>
 
 {% else %}
 <section class="panel">
@@ -64,12 +87,14 @@
     </li>
     {% endfor %}
   </ol>
-  <form method="post" action="{{ url_for('finalize') }}">
-    <button type="submit" class="btn">Finalize playlist</button>
-  </form>
-  <form method="post" action="{{ url_for('restart') }}">
-    <button type="submit" class="btn-secondary">Start over</button>
-  </form>
+  <div class="panel-actions">
+    <form method="post" action="{{ url_for('finalize') }}">
+      <button type="submit" class="btn">Finalize playlist</button>
+    </form>
+    <form method="post" action="{{ url_for('restart') }}">
+      <button type="submit" class="btn-secondary">Start over</button>
+    </form>
+  </div>
 </section>
 {% endif %}
 {% endblock %}
