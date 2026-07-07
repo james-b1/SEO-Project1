@@ -161,5 +161,12 @@ input:focus {
 .artist-avatar { width: 56px; height: 56px; border-radius: 50%;
                  object-fit: cover; flex-shrink: 0; }
 .artist-card p { margin: 4px 0 0; color: #a7a7a7; font-size: 0.9rem; }
-.bar { display: inline-block; height: 10px; background: #1db954;
-       border-radius: 999px; max-width: 300px; }
+.metrics { list-style: none; padding: 0; margin: 0; }
+.metric-row { padding: 12px 0; }
+.metric-row + .metric-row { border-top: 1px solid #2a2a2a; }
+.metric-label { display: flex; justify-content: space-between;
+                margin-bottom: 8px; font-size: 0.95rem; }
+.metric-name { font-weight: 600; }
+.metric-pct { color: #a7a7a7; }
+.metric-track { background: #2a2a2a; border-radius: 999px; height: 10px; overflow: hidden; }
+.metric-bar { display: block; height: 100%; background: #1db954; border-radius: 999px; }
