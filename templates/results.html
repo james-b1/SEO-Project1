@@ -17,10 +17,14 @@
   <h2>Artist Breakdown</h2>
   <ul class="metrics">
     {% for name, pct in breakdown %}
-    <li>
-      {{ name }}
-      <span class="bar" style="width: {{ pct }}%"></span>
-      {{ pct }}%
+    <li class="metric-row">
+      <div class="metric-label">
+        <span class="metric-name">{{ name }}</span>
+        <span class="metric-pct">{{ pct }}%</span>
+      </div>
+      <div class="metric-track">
+        <span class="metric-bar" style="width: {{ pct }}%"></span>
+      </div>
     </li>
     {% endfor %}
   </ul>
