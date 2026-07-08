@@ -37,8 +37,8 @@ def build_recommendations(songs, size):
      collaborators, get GenAI explanations, rank playlist candidates."""
   artists = []
   missing = []
-  for title, plays in songs:
-    result = search_artist(title)
+  for title, plays, artist in songs:
+    result = search_artist(title, artist)
     if result:
       result["seed_plays"] = plays
       artists.append(result)
@@ -135,12 +135,14 @@ def create():
     songs = []
     titles = request.form.getlist("song")
     plays_list = request.form.getlist("plays")
-    for title, plays_raw in zip(titles, plays_list):
+    artist = request.form.getlist("artist")
+    for title, plays_raw, artist in zip(titles, plays_list, artist):
       title = title.strip()
       plays_raw = plays_raw.strip()
+      artist = artist.strip()
       plays = int(plays_raw) if plays_raw.isdigit() else 0
       if title:
-        songs.append((title, plays))
+        songs.append((title, plays, artist))
     songs = songs[:5]
 
     if not songs:

@@ -14,7 +14,8 @@ def init_db():
     CREATE TABLE IF NOT EXISTS songs (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
-      play_count INTEGER NOT NULL
+      play_count INTEGER NOT NULL,
+      artist TEXT
     );
 
     CREATE TABLE IF NOT EXISTS recommended_artists (
@@ -46,7 +47,7 @@ def write_songs(songs):
   connection = get_connection()
   writer = connection.cursor()
   writer.executemany(
-    "INSERT INTO songs (title, play_count) VALUES(?, ?)",
+    "INSERT INTO songs (title, play_count, artist) VALUES(?, ?, ?)",
     songs
   )
   connection.commit()
@@ -55,7 +56,7 @@ def write_songs(songs):
 def get_songs():
   connection = get_connection()
   writer = connection.cursor()
-  writer.execute("SELECT title, play_count FROM songs")
+  writer.execute("SELECT title, play_count, artist FROM songs")
   rows = writer.fetchall()
   connection.close()
   return rows

@@ -9,6 +9,7 @@
       <div class="song-row">
         <label class="row-num">#{{ i }}</label>
         <input type="text" name="song" placeholder="Song name"{% if i == 1 %} autofocus{% endif %}>
+        <input type="text" name="artist" placeholder="Artist (Optional)" />
         <input type="number" name="plays" placeholder="Plays" min="0">
         <button type="button" class="btn-remove" onclick="removeRow(this)">✕</button>
       </div>

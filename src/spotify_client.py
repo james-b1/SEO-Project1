@@ -33,22 +33,26 @@ def get_client():
   return _client
 
 
-def search_artist(song_name, limit=10):
+def search_artist(song_name, artist, limit=10):
   """Find the most popular artist who released a track with the same
      title as input song. Returns a single artists, dictionaries, or None."""
   sp = get_client()
 
   try:
-    results = sp.search(q=song_name, type="track", limit=limit)
-    tracks = results["tracks"]["items"]
+    if artist:
+      artist_id = sp.search(q=artist, type="artist", limit=1)["artists"]["items"][0]["id"]
+    else:
+      results = sp.search(q=song_name, type="track", limit=limit)
+      tracks = results["tracks"]["items"]
 
-    exact = [t for t in tracks if t["name"].lower() == song_name.lower()]
+      exact = [t for t in tracks if t["name"].lower() == song_name.lower()]
 
-    if not exact:
-      return None
-    
-    best = max(exact, key=lambda t: t.get("popularity", 0))
-    artist_id = best["artists"][0]["id"]
+      if not exact:
+          return None
+      
+      best = max(exact, key=lambda t: t.get("popularity", 0))
+      artist_id = best["artists"][0]["id"]
+
     a = sp.artist(artist_id)
 
     return {
@@ -66,6 +70,7 @@ def search_artist(song_name, limit=10):
       print(f"Spotify {reason} for {song_name!r}; generating a synthetic match with Gemini.")
       return synthetic_artist(song_name)
     raise
+
 
 def get_collaborators(artist, limit=5):
   """Find real collaborators: other artists credited on this artist's tracks.
