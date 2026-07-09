@@ -324,6 +324,17 @@ input:focus {
     align-items: center;
     gap: 12px;
     padding: 9px 0;
+    border-radius: 8px;
+}
+
+/* Newly backfilled candidate: subtle green highlight that fades out */
+.track-list li.track-new {
+    animation: trackNew 2.4s ease-out;
+}
+
+@keyframes trackNew {
+    0%   { background: rgba(29, 185, 84, 0.22); }
+    100% { background: transparent; }
 }
 
 .track-head {

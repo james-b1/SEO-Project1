@@ -270,7 +270,16 @@
       })
       .then(function (html) {
         var list = document.getElementById("track-list");
-        if (list) list.outerHTML = html;
+        if (!list) return;
+        // Remember which tracks were on the list before the swap, so we can
+        // green-flash any candidate the server pulled in to backfill.
+        var prevIds = new Set(
+          Array.from(list.querySelectorAll("li")).map(function (li) { return li.dataset.trackId; })
+        );
+        list.outerHTML = html;
+        document.querySelectorAll("#track-list li").forEach(function (li) {
+          if (!prevIds.has(li.dataset.trackId)) li.classList.add("track-new");
+        });
       })
       .catch(function () { location.reload(); });
   });

@@ -1,6 +1,6 @@
 <ol class="track-list" id="track-list">
   {% for track in state.playlist %}
-  <li>
+  <li data-track-id="{{ track.track_id }}">
     <span class="track-num">{{ loop.index }}</span>
     <div class="track-main">
       <img src="{{ track.images or url_for('static', filename='logo.svg') }}"
