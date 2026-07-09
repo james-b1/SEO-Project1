@@ -1,40 +1,116 @@
-body { margin: 0; background: #121212; color: #f5f5f5;
-       font-family: -apple-system, "Segoe UI", Roboto, sans-serif; }
-.container { max-width: 720px; margin: 0 auto; padding: 24px 16px; }
-.topbar { padding: 16px 24px; border-bottom: 1px solid #2a2a2a; }
-.brand { color: #f5f5f5; text-decoration: none; font-weight: 700;
-         display: inline-flex; align-items: center; gap: 10px; }
-.brand-logo { width: 28px; height: 28px; }
-.hero-logo { width: 120px; height: 120px; margin-bottom: 16px;
-             filter: drop-shadow(0 0 44px rgba(23, 201, 100, 0.35)); }
-.hero { text-align: center; padding: 32px 16px;
-        min-height: calc(100vh - 200px);
-        display: flex; flex-direction: column;
-        align-items: center; justify-content: center; }
-.hero h1 { font-size: 3.5rem; color: #1db954; margin: 0 0 12px; letter-spacing: -1px; }
-.tagline { color: #a7a7a7; font-size: 1.2rem; max-width: 440px; margin: 0 auto 36px; }
-.btn-big { padding: 16px 56px; font-size: 1.2rem; }
-.panel { background: #1e1e1e; border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+/* ==========================================================================
+   Base & layout
+   ========================================================================== */
+body {
+    margin: 0;
+    background: #121212;
+    color: #f5f5f5;
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 24px 16px;
+}
+
+.topbar {
+    padding: 16px 24px;
+    border-bottom: 1px solid #2a2a2a;
+}
+
+.brand {
+    color: #f5f5f5;
+    text-decoration: none;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.brand-logo {
+    width: 28px;
+    height: 28px;
+}
+
+/* ==========================================================================
+   Hero / landing page
+   ========================================================================== */
+.hero-logo {
+    width: 120px;
+    height: 120px;
+    margin-bottom: 16px;
+    filter: drop-shadow(0 0 44px rgba(23, 201, 100, 0.35));
+}
+
+.hero {
+    text-align: center;
+    padding: 32px 16px;
+    min-height: calc(100vh - 200px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.hero h1 {
+    font-size: 3.5rem;
+    color: #1db954;
+    margin: 0 0 12px;
+    letter-spacing: -1px;
+}
+
+.tagline {
+    color: #a7a7a7;
+    font-size: 1.2rem;
+    max-width: 440px;
+    margin: 0 auto 36px;
+}
+
+.btn-big {
+    padding: 16px 56px;
+    font-size: 1.2rem;
+}
+
+/* ==========================================================================
+   Panels & forms
+   ========================================================================== */
+.panel {
+    background: #1e1e1e;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
 .panel form {
     display: flex;
     flex-direction: column;
     gap: 16px;
 }
-.flash { color: #f1b0b7; }
+
+.flash {
+    color: #f1b0b7;
+}
+
+/* ==========================================================================
+   Song input rows (build form)
+   ========================================================================== */
 #song-rows {
     display: flex;
     flex-direction: column;
     gap: 16px;
 }
+
 .song-row {
     display: flex;
     gap: 12px;
     align-items: center;
     animation: slideIn 0.3s ease;
 }
+
 @keyframes slideIn {
     from { transform: translateY(-5px); }
-    to { transform: translateY(0); }
+    to   { transform: translateY(0); }
 }
 
 .row-num {
@@ -45,21 +121,24 @@ body { margin: 0; background: #121212; color: #f5f5f5;
     font-size: 0.9rem;
 }
 
-input { 
-    background: #242424; 
-    color: #f5f5f5; 
+/* ==========================================================================
+   Text inputs
+   ========================================================================== */
+input {
+    background: #242424;
+    color: #f5f5f5;
     border: 1px solid transparent;
-    border-radius: 8px; 
-    padding: 12px 16px; 
+    border-radius: 8px;
+    padding: 12px 16px;
     transition: all 0.2s ease;
 }
 
-/* Song should get most space */
+/* Song field gets the most space in a row */
 input[name="song"] {
-    flex: 1
+    flex: 1;
 }
 
-/* Plays less space */
+/* Plays field is narrow */
 input[name="plays"] {
     width: 80px;
 }
@@ -74,16 +153,42 @@ input:focus {
     background: #2a2a2a;
 }
 
-.btn { background: #1db954; color: #003311; border: none; border-radius: 999px;
-       padding: 10px 24px; font-weight: 600; cursor: pointer;
-       text-decoration: none; display: inline-block;
-       transition: background 0.15s, transform 0.15s; }
+/* ==========================================================================
+   Buttons & action bars
+   ========================================================================== */
+.btn {
+    background: #1db954;
+    color: #003311;
+    border: none;
+    border-radius: 999px;
+    padding: 10px 24px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: background 0.15s, transform 0.15s;
+}
 
-.btn:hover { background: #1ed760; transform: translateY(-1px); }
-.btn-secondary { background: #2a2a2a; color: #f5f5f5; border: none;
-                 border-radius: 999px; padding: 10px 24px; cursor: pointer;
-                 font-weight: 600; text-decoration: none; display: inline-block; }
-.btn-secondary:hover { background: #3a3a3a; }
+.btn:hover {
+    background: #1ed760;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: #2a2a2a;
+    color: #f5f5f5;
+    border: none;
+    border-radius: 999px;
+    padding: 10px 24px;
+    cursor: pointer;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-secondary:hover {
+    background: #3a3a3a;
+}
 
 .panel-actions {
     display: flex;
@@ -136,6 +241,7 @@ input:focus {
     border-top: 1px solid #2a2a2a;
 }
 
+/* Playlist-size stepper in the build form */
 .size-control {
     display: flex;
     align-items: center;
@@ -143,7 +249,6 @@ input:focus {
     color: #a7a7a7;
     font-weight: 600;
     font-size: 0.9rem;
-    
 }
 
 .size-control input {
@@ -152,13 +257,23 @@ input:focus {
     text-align: center;
 }
 
-.track-list { list-style: none; padding: 0; margin: 0; }
-.track-head, .track-list li {
+/* ==========================================================================
+   Playlist / track list
+   ========================================================================== */
+.track-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.track-head,
+.track-list li {
     display: flex;
     align-items: center;
     gap: 12px;
     padding: 9px 0;
 }
+
 .track-head {
     padding-bottom: 8px;
     margin-bottom: 4px;
@@ -169,6 +284,7 @@ input:focus {
     color: #7a7a7a;
     font-weight: 600;
 }
+
 .track-num {
     width: 24px;
     flex-shrink: 0;
@@ -184,44 +300,141 @@ input:focus {
     align-items: center;
     gap: 12px;
 }
-.track-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.track-artists { font-size: 0.85rem; color: #a7a7a7;
-                 white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.track-art { width: 40px; height: 40px; border-radius: 6px;
-             object-fit: cover; flex-shrink: 0; }
-.track-pop, .track-pop-col { width: 96px; flex-shrink: 0; text-align: right; }
+
+.track-meta {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.track-artists {
+    font-size: 0.85rem;
+    color: #a7a7a7;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.track-art {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.track-pop,
+.track-pop-col {
+    width: 96px;
+    flex-shrink: 0;
+    text-align: right;
+}
+
 .track-pop {
     font-size: 0.95rem;
     font-weight: 600;
-    color: #8a8a8a;      /* muted, recedes behind the track name */
+    color: #8a8a8a;
     font-variant-numeric: tabular-nums;
 }
-.track-remove { width: 36px; flex-shrink: 0; display: flex; justify-content: center; }
-.artist-list { list-style: none; padding: 0; margin: 0; }
-.artist-card { display: flex; align-items: flex-start; gap: 14px; padding: 10px 0; }
-.artist-avatar { width: 56px; height: 56px; border-radius: 50%;
-                 object-fit: cover; flex-shrink: 0; }
-.artist-card p { margin: 4px 0 0; color: #a7a7a7; font-size: 0.9rem; }
-.metrics { list-style: none; padding: 0; margin: 0; }
-.metric-row { padding: 12px 0; }
-.metric-row + .metric-row { border-top: 1px solid #2a2a2a; }
-.metric-label { display: flex; justify-content: space-between;
-                margin-bottom: 8px; font-size: 0.95rem; }
-.metric-name { font-weight: 600; }
-.metric-pct { color: #a7a7a7; }
-.metric-track { background: #2a2a2a; border-radius: 999px; height: 10px; overflow: hidden; }
-.metric-bar { display: block; height: 100%; background: #1db954; border-radius: 999px; }
 
+.track-remove {
+    width: 36px;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+}
+
+/* ==========================================================================
+   Recommended artists
+   ========================================================================== */
+.artist-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.artist-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 10px 0;
+}
+
+.artist-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.artist-card p {
+    margin: 4px 0 0;
+    color: #a7a7a7;
+    font-size: 0.9rem;
+}
+
+/* ==========================================================================
+   Artist breakdown metrics (results page)
+   ========================================================================== */
+.metrics {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.metric-row {
+    padding: 12px 0;
+}
+
+.metric-row + .metric-row {
+    border-top: 1px solid #2a2a2a;
+}
+
+.metric-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+}
+
+.metric-name {
+    font-weight: 600;
+}
+
+.metric-pct {
+    color: #a7a7a7;
+}
+
+.metric-track {
+    background: #2a2a2a;
+    border-radius: 999px;
+    height: 10px;
+    overflow: hidden;
+}
+
+.metric-bar {
+    display: block;
+    height: 100%;
+    background: #1db954;
+    border-radius: 999px;
+}
+
+/* ==========================================================================
+   Artist autocomplete dropdown
+   ========================================================================== */
 .input-wrap {
     position: relative;
     display: flex;
     flex: 1;
-  }
-  .input-wrap input {
+}
+
+.input-wrap input {
     width: 100%;
-  }
-  
-  .mb-autocomplete {
+}
+
+.mb-autocomplete {
     position: absolute;
     top: 100%;
     left: 0;
@@ -235,29 +448,29 @@ input:focus {
     margin: 4px 0 0 0;
     max-height: 200px;
     overflow-y: auto;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.5);
-  }
-  
-  .mb-autocomplete li {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+}
+
+.mb-autocomplete li {
     padding: 10px 12px;
     cursor: pointer;
     font-size: 0.9rem;
     color: #f5f5f5;
     border-bottom: 1px solid #333;
     transition: background 0.1s ease;
-  }
-  
-  .mb-autocomplete li:last-child {
+}
+
+.mb-autocomplete li:last-child {
     border-bottom: none;
-  }
-  
-  .mb-autocomplete li:hover {
+}
+
+.mb-autocomplete li:hover {
     background: #1db954;
     color: #000;
     font-weight: 600;
-  }
-  
-  .mb-autocomplete .artist-hint {
+}
+
+.mb-autocomplete .artist-hint {
     font-size: 0.8rem;
     opacity: 0.8;
-  }
+}
