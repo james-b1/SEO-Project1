@@ -1,4 +1,3 @@
-# src/genai_client.py
 import os
 import json
 import urllib.error
@@ -41,7 +40,10 @@ def _try_gemini(user_message):
     contents=user_message,
     config=types.GenerateContentConfig(
       system_instruction=SYSTEM_PROMPT,
-      max_output_tokens=35,
+      # gemini-2.5-flash is a *thinking* model: without disabling it the token
+      # budget is spent on hidden reasoning and response.text comes back empty.
+      thinking_config=types.ThinkingConfig(thinking_budget=0),
+      max_output_tokens=80,
       temperature=0.4,
       ),
     )
@@ -52,9 +54,10 @@ def _try_gemini(user_message):
 
     return text
   except Exception as err:
-    if _is_quota_or_availability_error(err):
-      return ""
-    raise
+    # Any provider error (quota, bad request, network) should degrade to the
+    # next provider / local fallback — never break the whole recommendation build.
+    print(f"  → Gemini request failed: {err}")
+    return ""
 
 def _try_openrouter(user_message):
   api_key = os.getenv("OPENROUTER_API_KEY")
@@ -107,11 +110,6 @@ def _build_prompt(artist, connected_to):
     f"Connected to: {seeds}\n"
     f"Explain why the listener might enjoy them."
   )
-
-
-def _is_quota_or_availability_error(err):
-  text = str(err).lower()
-  return any(m in text for m in ("429", "503", "quota", "resource_exhausted", "unavailable"))
 
 
 def _is_valid(text):
