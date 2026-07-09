@@ -1,17 +1,23 @@
 <ol class="track-list" id="track-list">
   {% for track in state.playlist %}
   <li>
-    <img src="{{ track.images or url_for('static', filename='logo.svg') }}"
-         alt="" class="track-art">
-    <div class="track-meta">
-      <span class="track-name">{{ track.title }}</span>
-      <span class="track-artists">{{ track.artists or track.artist_name }}</span>
+    <span class="track-num">{{ loop.index }}</span>
+    <div class="track-main">
+      <img src="{{ track.images or url_for('static', filename='logo.svg') }}"
+           alt="" class="track-art">
+      <div class="track-meta">
+        <span class="track-name">{{ track.title }}</span>
+        <span class="track-artists">{{ track.artists or track.artist_name }}</span>
+      </div>
     </div>
-    {% if state.playlist | length > 1 %}
-    <form method="post" action="{{ url_for('remove', index=loop.index0) }}" data-remove>
-      <button type="submit" class="btn-remove">✕</button>
-    </form>
-    {% endif %}
+    <span class="track-pop">{{ track.popularity }}</span>
+    <div class="track-remove">
+      {% if state.playlist | length > 1 %}
+      <form method="post" action="{{ url_for('remove', index=loop.index0) }}" data-remove>
+        <button type="submit" class="btn-remove">✕</button>
+      </form>
+      {% endif %}
+    </div>
   </li>
   {% endfor %}
 </ol>

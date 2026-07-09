@@ -76,6 +76,12 @@
 
 <section class="panel">
   <h2>Your Playlist</h2>
+  <div class="track-head">
+    <span class="track-num">#</span>
+    <span class="track-main">Title</span>
+    <span class="track-pop-col">Popularity</span>
+    <span class="track-remove"></span>
+  </div>
   {% include "_playlist_tracks.html" %}
   <div class="panel-actions">
     <form method="post" action="{{ url_for('finalize') }}">

@@ -2,15 +2,24 @@
 {% block content %}
 <section class="panel">
   <h2>Final Playlist ({{ playlist|length }} songs)</h2>
+  <div class="track-head">
+    <span class="track-num">#</span>
+    <span class="track-main">Title</span>
+    <span class="track-pop-col">Popularity</span>
+  </div>
   <ol class="track-list">
     {% for track in playlist %}
     <li>
-      <img src="{{ track.images or url_for('static', filename='logo.svg') }}"
-           alt="" class="track-art">
-      <div class="track-meta">
-        <span class="track-name">{{ track.title }} (Popularity: {{ track.popularity }})</span>
-        <span class="track-artists">{{ track.artists or track.artist_name }}</span>
+      <span class="track-num">{{ loop.index }}</span>
+      <div class="track-main">
+        <img src="{{ track.images or url_for('static', filename='logo.svg') }}"
+             alt="" class="track-art">
+        <div class="track-meta">
+          <span class="track-name">{{ track.title }}</span>
+          <span class="track-artists">{{ track.artists or track.artist_name }}</span>
+        </div>
       </div>
+      <span class="track-pop">{{ track.popularity }}</span>
     </li>
     {% endfor %}
   </ol>
