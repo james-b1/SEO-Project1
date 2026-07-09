@@ -143,7 +143,7 @@ def synthetic_top_tracks(artist, limit=10):
       "track_id": f"synthetic:track:{_slug(name)}:{_slug(title)}",
       "popularity": _clamp_pop(item.get("popularity")),
       "artist_name": name,
-      # same album name -> same album_id, so swap_songs album-grouping still works
+      "artists": name,
       "album_id": f"synthetic:album:{_slug(name)}:{_slug(album_name)}",
       "album_name": album_name,
       "synthetic": True,

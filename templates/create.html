@@ -21,7 +21,7 @@
             <label>Playlist Size</label>
             <input type="number" name="size" value="10" min="1" max="50">
         </div>
-        <button type="submit" class="btn">Build my playlist</button>
+        <button type="submit" class="btn">Build</button>
     </div>
   </form>
 </section>
@@ -81,7 +81,10 @@
     <li>
       <img src="{{ track.images or url_for('static', filename='logo.svg') }}"
            alt="" class="track-art">
-      <span class="track-name">{{ track.title }} by {{ track.artist_name }}</span>
+      <div class="track-meta">
+        <span class="track-name">{{ track.title }}</span>
+        <span class="track-artists">{{ track.artists or track.artist_name }}</span>
+      </div>
       <form method="post" action="{{ url_for('remove', index=loop.index0) }}">
         <button type="submit" class="btn-remove">✕</button>
       </form>

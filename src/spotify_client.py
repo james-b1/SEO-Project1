@@ -160,6 +160,9 @@ def get_top_tracks(artist, country="US", limit=10):
           "track_id": track["id"],
           "popularity": track.get("popularity", 0),
           "artist_name": artist["name"],
+          # Full credited-artist list (primary + features), Spotify order, for
+          # display. Falls back to the searched artist if Spotify omits credits.
+          "artists": ", ".join(a["name"] for a in track.get("artists", [])) or artist["name"],
           "album_id": album.get("id"),
           "album_name": album.get("name"),
           #tracks > items > albums > images
@@ -185,9 +188,9 @@ def rank_top_tracks(artists, limit=10):
     artist_bonus = max(0, 30 - (artist_idx * 5))
 
     for track_idx, track in enumerate(get_top_tracks(artist, limit=tracks_per_artist)):
-      title_key = track["title"].strip().lower()
-      artist_key = track["artist_name"].strip().lower()
-      key = (title_key, artist_key)
+      # Dedupe by Spotify track id so an identical song surfaced under multiple
+      # seed artists (e.g. a feature) is kept once; the first-seen copy wins.
+      key = track["track_id"]
 
       if key in candidates:
         continue

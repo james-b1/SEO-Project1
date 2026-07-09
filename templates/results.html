@@ -7,7 +7,10 @@
     <li>
       <img src="{{ track.images or url_for('static', filename='logo.svg') }}"
            alt="" class="track-art">
-      <span class="track-name">{{ track.title }} by {{ track.artist_name }} (Popularity: {{ track.popularity }})</span>
+      <div class="track-meta">
+        <span class="track-name">{{ track.title }} (Popularity: {{ track.popularity }})</span>
+        <span class="track-artists">{{ track.artists or track.artist_name }}</span>
+      </div>
     </li>
     {% endfor %}
   </ol>

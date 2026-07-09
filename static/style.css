@@ -154,7 +154,8 @@ input:focus {
 
 .track-list li { display: flex; align-items: center; gap: 12px;
                  padding: 8px 0; }
-.track-name { flex: 1; }
+.track-meta { flex: 1; display: flex; flex-direction: column; }
+.track-artists { font-size: 0.85rem; color: #757575; }
 .track-art { width: 28px; height: 28px; border-radius: 6px; object-fit: cover; }
 .artist-list { list-style: none; padding: 0; margin: 0; }
 .artist-card { display: flex; align-items: flex-start; gap: 14px; padding: 10px 0; }
