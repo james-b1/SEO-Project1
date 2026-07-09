@@ -76,21 +76,7 @@
 
 <section class="panel">
   <h2>Your Playlist</h2>
-  <ol class="track-list">
-    {% for track in state.playlist %}
-    <li>
-      <img src="{{ track.images or url_for('static', filename='logo.svg') }}"
-           alt="" class="track-art">
-      <div class="track-meta">
-        <span class="track-name">{{ track.title }}</span>
-        <span class="track-artists">{{ track.artists or track.artist_name }}</span>
-      </div>
-      <form method="post" action="{{ url_for('remove', index=loop.index0) }}">
-        <button type="submit" class="btn-remove">✕</button>
-      </form>
-    </li>
-    {% endfor %}
-  </ol>
+  {% include "_playlist_tracks.html" %}
   <div class="panel-actions">
     <form method="post" action="{{ url_for('finalize') }}">
       <button type="submit" class="btn">Finalize playlist</button>
@@ -100,5 +86,27 @@
     </form>
   </div>
 </section>
+
+<script>
+  document.addEventListener("submit", function (e) {
+    var form = e.target.closest("form[data-remove]");
+    if (!form) return;
+    e.preventDefault();
+
+    fetch(form.action, {
+      method: "POST",
+      headers: { "X-Requested-With": "fetch" },
+    })
+      .then(function (res) {
+        if (!res.ok) throw new Error("remove failed");
+        return res.text();
+      })
+      .then(function (html) {
+        var list = document.getElementById("track-list");
+        if (list) list.outerHTML = html;
+      })
+      .catch(function () { location.reload(); });
+  });
+</script>
 {% endif %}
 {% endblock %}

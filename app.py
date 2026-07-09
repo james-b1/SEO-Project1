@@ -169,6 +169,12 @@ def remove(index):
   state = get_state()
   if state and 0 <= index < len(state["playlist"]):
     remove_track(state, index)
+
+  if request.headers.get("X-Requested-With") == "fetch":
+    if not state:
+      return ("", 409)
+    return render_template("_playlist_tracks.html", state=state)
+
   return redirect(url_for("create"))
 
 
