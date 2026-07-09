@@ -154,7 +154,13 @@ def create():
     size = int(size_raw) if size_raw.isdigit() and 1 <= int(size_raw) <= 50 else 10
 
     write_songs(songs)
-    state, missing = build_recommendations(songs, size)
+    try:
+      state, missing = build_recommendations(songs, size)
+    except Exception:
+      # Network timeout, non-403/429 Spotify error, etc. — don't 500 the page.
+      app.logger.exception("build_recommendations failed")
+      flash("Music services are unavailable right now — please try again in a moment.")
+      return redirect(url_for("create"))
     for title in missing:
       flash(f"Could not find a Spotify match for {title!r}; skipped it.")
     if state is None:

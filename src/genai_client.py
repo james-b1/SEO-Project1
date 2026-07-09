@@ -10,9 +10,19 @@ load_dotenv()
 GEMINI_MODEL = "gemini-2.5-flash"
 OPENROUTER_MODEL = "meta-llama/llama-3.2-3b-instruct:free"
 
-client = genai.Client(
-  api_key=os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-)
+_client = None
+
+
+def _get_client():
+  """Build the Gemini client lazily. Constructing it eagerly at import time
+  raises ValueError when no key is set — which would crash the whole app on
+  startup. Deferring lets `_try_gemini` catch the failure and fall back."""
+  global _client
+  if _client is None:
+    _client = genai.Client(
+      api_key=os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+    )
+  return _client
 
 SYSTEM_PROMPT = (
   "Write one short sentence explaining why user, address as 'you' might like the artist."
@@ -35,7 +45,7 @@ def explain_artist(artist, connected_to):
 def _try_gemini(user_message):
   """Call Gemini, returns _try_gemini(user_message)"""
   try:
-    response = client.models.generate_content(
+    response = _get_client().models.generate_content(
     model=GEMINI_MODEL,
     contents=user_message,
     config=types.GenerateContentConfig(

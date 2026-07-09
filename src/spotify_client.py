@@ -64,7 +64,7 @@ def search_artist(song_name, artist, limit=10):
       "popularity": a.get("popularity", 0),
       # Spotify returns [] for dev-mode apps; collaborators no longer rely on it.
       "genres": a.get("genres", []),
-      "images": a["images"][0]["url"]
+      "images": (a.get("images") or [{}])[0].get("url")
     }
   
   except SpotifyException as err:
@@ -107,14 +107,18 @@ def get_collaborators(artist, limit=5):
   for track in results.get("tracks", {}).get("items", []):
     for credited in track.get("artists", []):
       cid = credited.get("id")
-      a = sp.artist(cid)
-      
-      
+      # Skip the seed artist and any missing id BEFORE spending an API call.
       if not cid or cid == artist["id"]:
         continue
       counts[cid] = counts.get(cid, 0) + 1
-      images[cid] = a["images"][0]["url"]
       names[cid] = credited.get("name")
+      # Fetch each collaborator's image once; a rate-limit/error here just
+      # leaves it unset (templates fall back to the logo) instead of crashing.
+      if cid not in images:
+        try:
+          images[cid] = (sp.artist(cid).get("images") or [{}])[0].get("url")
+        except SpotifyException:
+          images[cid] = None
 
   ranked = sorted(counts, key=lambda cid: counts[cid], reverse=True)[:limit]
   return [
@@ -168,8 +172,7 @@ def get_top_tracks(artist, country="US", limit=10):
           "artists": ", ".join(a["name"] for a in track.get("artists", [])) or artist["name"],
           "album_id": album.get("id"),
           "album_name": album.get("name"),
-          #tracks > items > albums > images
-          "images": album['images'][0]['url']
+          "images": (album.get("images") or [{}])[0].get("url")
         })
 
   except SpotifyException as err:
