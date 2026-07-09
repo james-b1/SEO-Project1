@@ -280,7 +280,7 @@ input:focus {
 /* ==========================================================================
    Build-form rows: search field -> selected card
    ========================================================================== */
-/* The search input wrapper grows to fill the row; hidden once a pick is made. */
+
 .search-field {
     flex: 1;
 }
@@ -436,6 +436,182 @@ input:focus {
     margin: 4px 0 0;
     color: #a7a7a7;
     font-size: 0.9rem;
+}
+
+/* ==========================================================================
+   Results reveal: full-screen artist moments -> playlist
+   ========================================================================== */
+html.results-view {
+    scroll-snap-type: y mandatory;
+    overflow-x: clip;
+}
+
+.reveal-flow {
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+}
+
+.stage-intro,
+.artists-stage,
+.playlist-stage {
+    scroll-snap-align: start;
+    box-sizing: border-box;
+}
+
+.stage-intro {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 16px;
+    padding: 48px 24px;
+}
+
+.stage-eyebrow {
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #1db954;
+}
+
+.stage-heading {
+    margin: 0;
+    font-size: 2.4rem;
+    letter-spacing: -0.5px;
+}
+
+/* Artists moment: full screen holding one centered, wrapping row of tiles */
+.artists-stage {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+}
+
+.artists-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 36px;
+    max-width: 920px;
+}
+
+.artist-tile {
+    width: 180px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
+}
+
+.tile-avatar {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+
+.tile-name {
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.tile-explanation {
+    margin: 0;
+    color: #a7a7a7;
+    font-size: 0.9rem;
+    line-height: 1.45;
+}
+
+.scroll-cue {
+    margin-top: 8px;
+    font-size: 1.8rem;
+    line-height: 1;
+    color: #7a7a7a;
+    animation: scrollCue 1.6s ease-in-out infinite;
+}
+
+@keyframes scrollCue {
+    0%, 100% { transform: translateY(0);   opacity: 0.5; }
+    50%      { transform: translateY(6px); opacity: 1; }
+}
+
+.reveal-flow--js [data-reveal] {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.reveal-flow--js [data-reveal].in-view {
+    opacity: 1;
+    transform: none;
+}
+
+.playlist-stage {
+    min-height: 100vh;
+    padding-bottom: 64px;
+}
+
+.artist-strip {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 24px;
+    background: rgba(18, 18, 18, 0.85);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid #2a2a2a;
+}
+
+.strip-avatars {
+    display: flex;
+}
+
+.strip-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #121212;
+    margin-left: -10px;
+}
+
+.strip-avatar:first-child {
+    margin-left: 0;
+}
+
+.strip-label {
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.playlist-body {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 24px 16px 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html.results-view { scroll-snap-type: none; }
+    .reveal-flow--js [data-reveal] { opacity: 1; transform: none; transition: none; }
+    .scroll-cue { animation: none; }
+}
+
+@media (max-width: 560px) {
+    .stage-heading { font-size: 1.8rem; }
+    .artists-row { gap: 24px; }
+    .artist-tile { width: 140px; }
+    .tile-avatar { width: 110px; height: 110px; }
 }
 
 /* ==========================================================================

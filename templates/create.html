@@ -219,40 +219,79 @@
 </script>
 
 {% else %}
-<section class="panel">
-  <h2>Recommended Artists</h2>
-  <ul class="artist-list">
-    {% for artist in state.recommended %}
-    <li class="artist-card">
-      <img src="{{ artist.image or url_for('static', filename='logo.svg') }}"
-           alt="" class="artist-avatar">
-      <div>
-        <strong>{{ artist.name }}</strong>
-        {% if artist.explanation %}<p>{{ artist.explanation }}</p>{% endif %}
-      </div>
-    </li>
-    {% endfor %}
-  </ul>
-</section>
+<div class="reveal-flow">
+  <div class="stage-intro" data-reveal>
+    <p class="stage-eyebrow">Based on your favorites</p>
+    <h2 class="stage-heading">You might love</h2>
+    <span class="scroll-cue" aria-hidden="true">⌄</span>
+  </div>
 
-<section class="panel">
-  <h2>Your Playlist</h2>
-  <div class="track-head">
-    <span class="track-num">#</span>
-    <span class="track-main">Title</span>
-    <span class="track-pop-col">Popularity</span>
-    <span class="track-remove"></span>
-  </div>
-  {% include "_playlist_tracks.html" %}
-  <div class="panel-actions">
-    <form method="post" action="{{ url_for('finalize') }}">
-      <button type="submit" class="btn">Finalize playlist</button>
-    </form>
-    <form method="post" action="{{ url_for('restart') }}">
-      <button type="submit" class="btn-secondary">Start over</button>
-    </form>
-  </div>
-</section>
+  <section class="artists-stage" data-reveal>
+    <div class="artists-row">
+      {% for artist in state.recommended %}
+      <div class="artist-tile">
+        <img src="{{ artist.image or url_for('static', filename='logo.svg') }}"
+             alt="" class="tile-avatar">
+        <strong class="tile-name">{{ artist.name }}</strong>
+        {% if artist.explanation %}<p class="tile-explanation">{{ artist.explanation }}</p>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="playlist-stage" data-reveal>
+    <div class="artist-strip">
+      <div class="strip-avatars">
+        {% for artist in state.recommended %}
+        <img src="{{ artist.image or url_for('static', filename='logo.svg') }}"
+             alt="" class="strip-avatar" title="{{ artist.name }}">
+        {% endfor %}
+      </div>
+      <span class="strip-label">Your Playlist</span>
+    </div>
+
+    <div class="playlist-body">
+      <div class="track-head">
+        <span class="track-num">#</span>
+        <span class="track-main">Title</span>
+        <span class="track-pop-col">Popularity</span>
+        <span class="track-remove"></span>
+      </div>
+      {% include "_playlist_tracks.html" %}
+      <div class="panel-actions">
+        <form method="post" action="{{ url_for('finalize') }}">
+          <button type="submit" class="btn">Finalize playlist</button>
+        </form>
+        <form method="post" action="{{ url_for('restart') }}">
+          <button type="submit" class="btn-secondary">Start over</button>
+        </form>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+  (function () {
+    document.documentElement.classList.add("results-view");
+    var flow = document.querySelector(".reveal-flow");
+    if (flow) flow.classList.add("reveal-flow--js");
+
+    var targets = document.querySelectorAll("[data-reveal]");
+    if (!("IntersectionObserver" in window)) {
+      targets.forEach(function (el) { el.classList.add("in-view"); });
+      return;
+    }
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("in-view");
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.5 });
+    targets.forEach(function (el) { observer.observe(el); });
+  })();
+</script>
 
 <script>
   document.addEventListener("submit", function (e) {
