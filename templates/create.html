@@ -8,8 +8,14 @@
       {% for i in range(1, 4) %}
       <div class="song-row">
         <label class="row-num">#{{ i }}</label>
-        <input type="text" name="song" placeholder="Song name (optional)"{% if i == 1 %} autofocus{% endif %}>
-        <input type="text" name="artist" placeholder="Artist (optional)" />
+
+        <div class="input-wrap">
+            <input type="text" name="song" placeholder="Song name (optional)"{% if i == 1 %} autofocus{% endif %} autocomplete="off">
+        </div>
+
+        <div class="input-wrap">
+            <input type="text" name="artist" placeholder="Artist (optional)" autocomplete="off" />
+        </div>
         <input type="number" name="plays" placeholder="Plays" min="0">
         <button type="button" class="btn-remove" onclick="removeRow(this)">✕</button>
       </div>
@@ -44,6 +50,10 @@
       input.value = "";
       input.removeAttribute("autofocus");
     });
+
+    // remove autocomplete dropdowns
+    row.querySelectorAll(".mb-autocomplete").forEach(el => el.remove());
+
     rows.appendChild(row);
     renumber();
   }
@@ -55,6 +65,131 @@
   }
 
   renumber();
+
+  document.addEventListener('DOMContentLoaded', () => {
+
+    const debounce = (fn, delay) => {
+        let timeout;
+        return (...args) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => fn(...args), delay);
+        };
+    };
+
+    let activeDropdown = null;
+
+    const closeDropdown = () => {
+        if (activeDropdown) {
+            activeDropdown.remove();
+            activeDropdown = null;
+        }
+    };
+
+    document.addEventListener("click", closeDropdown)
+
+    const handleInput = debounce(async (e) => {
+        if (e.target.tagName !== "INPUT" || (e.target.name !== "song" && e.target.name !== "artist")) return;
+
+        const input = e.target;
+        const row = input.closest(".song-row");
+        const songInput = row.querySelector("[name='song']");
+        const artistInput = row.querySelector('[name="artist"]');
+
+        const songVal = songInput.value.trim();
+        const artistVal = artistInput.value.trim();
+
+        if (!input.value.trim()) {
+            closeDropdown();
+            return;
+        }
+
+        let url = '';
+        let isSong = input.name === "song";
+
+        if (isSong) {
+            const term = `${songVal} ${artistVal}`.trim();
+            url = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=song&limit=5`;
+        } else {
+            url = `https://itunes.apple.com/search?term=${encodeURIComponent(artistVal)}&entity=musicArtist&limit=5`;
+        }
+        
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+
+            closeDropdown();
+
+            if (!data.results || data.results.length === 0) return;
+
+            let items = [];
+
+            if (isSong) {
+                // parse songs and their first credited artist
+                items = data.results.map(r => ({
+                    title: r.trackName,
+                    artist: r.artistName,
+                    art: r.artworkUrl30
+                }));
+            } else {
+                items = data.results.map(r => ({
+                    title: "",
+                    artist: a.artistName,
+                }))
+            }
+
+            // dedupe slightly
+            items = items.filter((item, index, self) => 
+                index === self.findIndex((t) => t.title === item.title && t.artist === item.artist)
+            );
+
+            if (items.length === 0) return;
+
+            // build & inject dropdown ui
+            activeDropdown = document.createElement("ul");
+            activeDropdown.className = "mb-autocomplete";
+
+            items.forEach(item => {
+                const li = document.createElement("li");
+
+                li.style.display = "flex";
+                li.style.alignItems = "center";
+                li.style.gap = "10px";
+
+                if (isSong) {
+                    const imgHtml = item.art ? `<img src="${item.art}" style="width: 30px; height: 30px; border-radius: 4px;">` : '';
+                    li.innerHTML = `
+                        ${imgHtml}
+                        <div>
+                            <span>${item.title}</span>
+                            <span class="artist-hint">by ${item.artist}</span>
+                        </div>
+                    `
+                } else {
+                    li.textContent = item.artist;
+                }
+
+                li.addEventListener("click", (ev) => {
+                    ev.stopPropagation();
+                    if (isSong) {
+                        songInput.value = item.title;
+                        if (item.artist) artistInput.value = item.artist;
+                    } else {
+                        artistInput.value = item.artist;
+                    }
+                    closeDropdown();
+                });
+
+                activeDropdown.appendChild(li);
+            });
+
+            input.closest('.input-wrap').appendChild(activeDropdown);
+        } catch (err) {
+            console.error("MusicBrainz API Error:", err);
+        }
+    }, 300)
+
+    document.getElementById("song-rows").addEventListener("input", handleInput);
+  });
 </script>
 
 {% else %}
