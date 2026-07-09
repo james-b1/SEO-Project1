@@ -1,6 +1,7 @@
+import os
 import sqlite3
 
-DB_PATH= "recommender.db"
+DB_PATH= "/tmp/recommender.db" if os.getenv("VERCEL") else "recommender.db"
 
 def get_connection():
   ''' Opens Connection '''
