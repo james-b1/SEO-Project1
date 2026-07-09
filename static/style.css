@@ -133,14 +133,21 @@ input {
     transition: all 0.2s ease;
 }
 
+/* Strip the up/down spinner arrows from number inputs (plays, playlist size) */
+input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
 /* Song field gets the most space in a row */
 input[name="song"] {
     flex: 1;
-}
-
-/* Plays field is narrow */
-input[name="plays"] {
-    width: 80px;
 }
 
 input:hover {
@@ -216,20 +223,33 @@ input:focus {
     color: #e35d6a;
 }
 
-.btn-add-song {
+.btn-add-song,
+.btn-add {
     background: transparent;
     color: #a7a7a7;
-    border: none;
+    border: 1px dashed #3a3a3a;
+    border-radius: 8px;
     font-size: 0.9rem;
     cursor: pointer;
-    padding: 8px 0;
+    padding: 10px 14px;
     text-align: left;
-    width: max-content;
-    transition: color 0.2s ease;
+    transition: color 0.2s ease, border-color 0.2s ease;
 }
 
-.btn-add-song:hover {
+.btn-add-song:hover,
+.btn-add:hover {
     color: #ffffff;
+    border-color: #5a5a5a;
+}
+
+.btn-add:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.add-actions {
+    display: flex;
+    gap: 12px;
 }
 
 .action-bar {
@@ -255,6 +275,38 @@ input:focus {
     width: 60px;
     padding: 8px 12px;
     text-align: center;
+}
+
+/* ==========================================================================
+   Build-form rows: search field -> selected card
+   ========================================================================== */
+/* The search input wrapper grows to fill the row; hidden once a pick is made. */
+.search-field {
+    flex: 1;
+}
+
+/* Compact card shown after a song/artist is chosen (mirrors a playlist row) */
+.row-card {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Artist rows have no artwork, so the app logo sits inside the art slot */
+.row-card .artist-logo {
+    object-fit: contain;
+    background: #242424;
+    padding: 6px;
+}
+
+/* Small plays field kept on song cards */
+.plays-input {
+    width: 64px;
+    padding: 8px 12px;
+    text-align: center;
+    flex-shrink: 0;
 }
 
 /* ==========================================================================

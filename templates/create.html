@@ -2,64 +2,89 @@
 {% block content %}
 {% if not state %}
 <section class="panel">
-  <h2>Your Top Songs</h2>
+  <h2>Your Favorites</h2>
   <form method="post" action="{{ url_for('create') }}">
-    <div id="song-rows">
-      {% for i in range(1, 4) %}
-      <div class="song-row">
-        <label class="row-num">#{{ i }}</label>
+    <div id="song-rows"></div>
 
-        <div class="input-wrap">
-            <input type="text" name="song" placeholder="Song name (optional)"{% if i == 1 %} autofocus{% endif %} autocomplete="off">
-        </div>
-
-        <div class="input-wrap">
-            <input type="text" name="artist" placeholder="Artist (optional)" autocomplete="off" />
-        </div>
-        <input type="number" name="plays" placeholder="Plays" min="0">
-        <button type="button" class="btn-remove" onclick="removeRow(this)">✕</button>
-      </div>
-      {% endfor %}
+    <div class="add-actions">
+      <button type="button" class="btn-add" data-add onclick="addSongRow()">+ Add song</button>
+      <button type="button" class="btn-add" data-add onclick="addArtistRow()">+ Add artist</button>
     </div>
-    <button type="button" id="add-song" class="btn-add-song" onclick="addRow()">+ Add song</button>
+
     <div class="action-bar">
-        <div class="size-control">
-            <label>Playlist Size</label>
-            <input type="number" name="size" value="10" min="1" max="50">
-        </div>
-        <button type="submit" class="btn">Build</button>
+      <div class="size-control">
+        <label>Playlist Size</label>
+        <input type="number" name="size" value="10" min="1" max="50">
+      </div>
+      <button type="submit" class="btn">Build</button>
     </div>
   </form>
 </section>
 
+<template id="song-row-tpl">
+  <div class="song-row" data-type="song">
+    <span class="row-num">#1</span>
+    <div class="input-wrap search-field">
+      <input type="text" name="song" placeholder="Search a song…" autocomplete="off">
+    </div>
+    <div class="row-card" hidden>
+      <img class="track-art artist-logo"
+           src="{{ url_for('static', filename='logo.svg') }}" alt="">
+      <div class="track-meta">
+        <span class="track-name"></span>
+        <span class="track-artists"></span>
+      </div>
+    </div>
+    <input type="hidden" name="artist" value="">
+    <input type="number" name="plays" class="plays-input" placeholder="Plays" min="0" hidden>
+    <button type="button" class="btn-remove" onclick="removeRow(this)">✕</button>
+  </div>
+</template>
+
+<template id="artist-row-tpl">
+  <div class="song-row" data-type="artist">
+    <span class="row-num">#1</span>
+    <div class="input-wrap search-field">
+      <input type="text" name="artist" placeholder="Search an artist…" autocomplete="off">
+    </div>
+    <div class="row-card" hidden>
+      <img class="track-art artist-logo"
+           src="{{ url_for('static', filename='logo.svg') }}" alt="">
+      <div class="track-meta">
+        <span class="track-name"></span>
+      </div>
+    </div>
+    <input type="hidden" name="song" value="">
+    <input type="hidden" name="plays" value="0">
+    <button type="button" class="btn-remove" onclick="removeRow(this)">✕</button>
+  </div>
+</template>
+
 <script>
   var MAX_ROWS = 5;
   var rows = document.getElementById("song-rows");
-  var addBtn = document.getElementById("add-song");
+  var addButtons = document.querySelectorAll("[data-add]");
 
   function renumber() {
     var labels = rows.querySelectorAll(".row-num");
     labels.forEach(function (label, i) { label.textContent = "#" + (i + 1); });
-    addBtn.disabled = rows.children.length >= MAX_ROWS;
+    var full = rows.children.length >= MAX_ROWS;
+    addButtons.forEach(function (btn) { btn.disabled = full; });
   }
 
-  function addRow() {
+  function addRowFrom(tplId) {
     if (rows.children.length >= MAX_ROWS) return;
-    var row = rows.children[0].cloneNode(true);
-    row.querySelectorAll("input").forEach(function (input) {
-      input.value = "";
-      input.removeAttribute("autofocus");
-    });
-
-    // remove autocomplete dropdowns
-    row.querySelectorAll(".mb-autocomplete").forEach(el => el.remove());
-
-    rows.appendChild(row);
+    var tpl = document.getElementById(tplId);
+    rows.appendChild(tpl.content.cloneNode(true));
     renumber();
+    var input = rows.lastElementChild.querySelector(".search-field input");
+    if (input) input.focus();
   }
+
+  function addSongRow()   { addRowFrom("song-row-tpl"); }
+  function addArtistRow() { addRowFrom("artist-row-tpl"); }
 
   function removeRow(btn) {
-    if (rows.children.length <= 1) return;
     btn.closest(".song-row").remove();
     renumber();
   }
@@ -85,34 +110,53 @@
         }
     };
 
-    document.addEventListener("click", closeDropdown)
+    document.addEventListener("click", closeDropdown);
+
+    // Collapse a row from its search field into a compact playlist-style card.
+    const fillCard = (row, item, isSong) => {
+        const searchField = row.querySelector(".search-field");
+        const visibleInput = searchField.querySelector("input");
+        const card = row.querySelector(".row-card");
+
+        if (isSong) {
+            visibleInput.value = item.title;
+            row.querySelector('input[name="artist"]').value = item.artist || "";
+            const art = card.querySelector(".track-art");
+            if (item.art) {
+                const logo = art.src;
+                art.onerror = () => { art.onerror = null; art.src = logo; art.classList.add("artist-logo"); };
+                art.classList.remove("artist-logo");
+                art.src = item.art;
+            }
+            card.querySelector(".track-name").textContent = item.title;
+            card.querySelector(".track-artists").textContent = item.artist || "";
+            const plays = row.querySelector(".plays-input");
+            if (plays) plays.hidden = false;
+        } else {
+            visibleInput.value = item.artist;
+            card.querySelector(".track-name").textContent = item.artist;
+        }
+
+        searchField.hidden = true;
+        card.hidden = false;
+    };
 
     const handleInput = debounce(async (e) => {
-        if (e.target.tagName !== "INPUT" || (e.target.name !== "song" && e.target.name !== "artist")) return;
-
         const input = e.target;
-        const row = input.closest(".song-row");
-        const songInput = row.querySelector("[name='song']");
-        const artistInput = row.querySelector('[name="artist"]');
+        if (input.tagName !== "INPUT" || (input.name !== "song" && input.name !== "artist")) return;
 
-        const songVal = songInput.value.trim();
-        const artistVal = artistInput.value.trim();
+        const isSong = input.name === "song";
+        const term = input.value.trim();
 
-        if (!input.value.trim()) {
+        if (!term) {
             closeDropdown();
             return;
         }
 
-        let url = '';
-        let isSong = input.name === "song";
+        const url = isSong
+            ? `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=song&limit=5`
+            : `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=musicArtist&limit=5`;
 
-        if (isSong) {
-            const term = `${songVal} ${artistVal}`.trim();
-            url = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=song&limit=5`;
-        } else {
-            url = `https://itunes.apple.com/search?term=${encodeURIComponent(artistVal)}&entity=musicArtist&limit=5`;
-        }
-        
         try {
             const res = await fetch(url);
             const data = await res.json();
@@ -121,24 +165,12 @@
 
             if (!data.results || data.results.length === 0) return;
 
-            let items = [];
-
-            if (isSong) {
-                // parse songs and their first credited artist
-                items = data.results.map(r => ({
-                    title: r.trackName,
-                    artist: r.artistName,
-                    art: r.artworkUrl30
-                }));
-            } else {
-                items = data.results.map(r => ({
-                    title: "",
-                    artist: r.artistName,
-                }))
-            }
+            let items = isSong
+                ? data.results.map(r => ({ title: r.trackName, artist: r.artistName, art: r.artworkUrl60 || r.artworkUrl30 }))
+                : data.results.map(r => ({ title: "", artist: r.artistName }));
 
             // dedupe slightly
-            items = items.filter((item, index, self) => 
+            items = items.filter((item, index, self) =>
                 index === self.findIndex((t) => t.title === item.title && t.artist === item.artist)
             );
 
@@ -150,32 +182,26 @@
 
             items.forEach(item => {
                 const li = document.createElement("li");
-
                 li.style.display = "flex";
                 li.style.alignItems = "center";
                 li.style.gap = "10px";
 
                 if (isSong) {
-                    const imgHtml = item.art ? `<img src="${item.art}" style="width: 30px; height: 30px; border-radius: 4px;">` : '';
+                    const imgHtml = item.art ? `<img src="${item.art}" style="width: 30px; height: 30px; border-radius: 4px;">` : "";
                     li.innerHTML = `
                         ${imgHtml}
                         <div>
                             <span>${item.title}</span>
                             <span class="artist-hint">by ${item.artist}</span>
                         </div>
-                    `
+                    `;
                 } else {
                     li.textContent = item.artist;
                 }
 
                 li.addEventListener("click", (ev) => {
                     ev.stopPropagation();
-                    if (isSong) {
-                        songInput.value = item.title;
-                        if (item.artist) artistInput.value = item.artist;
-                    } else {
-                        artistInput.value = item.artist;
-                    }
+                    fillCard(input.closest(".song-row"), item, isSong);
                     closeDropdown();
                 });
 
@@ -186,7 +212,7 @@
         } catch (err) {
             console.error("API Error:", err);
         }
-    }, 300)
+    }, 300);
 
     document.getElementById("song-rows").addEventListener("input", handleInput);
   });
