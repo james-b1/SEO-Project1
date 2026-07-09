@@ -167,7 +167,8 @@ def create():
 @app.route("/remove/<int:index>", methods=["POST"])
 def remove(index):
   state = get_state()
-  if state and 0 <= index < len(state["playlist"]):
+  # Keep at least one track — refuse to remove the final one.
+  if state and len(state["playlist"]) > 1 and 0 <= index < len(state["playlist"]):
     remove_track(state, index)
 
   if request.headers.get("X-Requested-With") == "fetch":
