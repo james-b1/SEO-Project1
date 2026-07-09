@@ -40,7 +40,10 @@ def search_artist(song_name, artist, limit=10):
 
   try:
     if artist:
-      artist_id = sp.search(q=artist, type="artist", limit=1)["artists"]["items"][0]["id"]
+      items = sp.search(q=artist, type="artist", limit=1)["artists"]["items"]
+      if not items:
+        return None
+      artist_id = items[0]["id"]
     else:
       results = sp.search(q=song_name, type="track", limit=limit)
       tracks = results["tracks"]["items"]

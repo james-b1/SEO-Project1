@@ -43,7 +43,7 @@ def build_recommendations(songs, size):
       result["seed_plays"] = plays
       artists.append(result)
     else:
-      missing.append(title)
+      missing.append(title or artist)
 
   if not artists:
     return None, missing
@@ -135,18 +135,19 @@ def create():
     songs = []
     titles = request.form.getlist("song")
     plays_list = request.form.getlist("plays")
-    artist = request.form.getlist("artist")
-    for title, plays_raw, artist in zip(titles, plays_list, artist):
+    artists = request.form.getlist("artist")
+    for title, plays_raw, artist in zip(titles, plays_list, artists):
       title = title.strip()
       plays_raw = plays_raw.strip()
       artist = artist.strip()
       plays = int(plays_raw) if plays_raw.isdigit() else 0
-      if title:
+      # A row counts if either the song or the artist is filled in.
+      if title or artist:
         songs.append((title, plays, artist))
     songs = songs[:5]
 
     if not songs:
-      flash("Please enter at least one song.")
+      flash("Please enter at least one song or artist.")
       return redirect(url_for("create"))
 
     size_raw = request.form.get("size", "").strip()
