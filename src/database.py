@@ -1,3 +1,4 @@
+import json
 import os
 import sqlite3
 
@@ -38,6 +39,12 @@ def init_db():
       popularity INTEGER,
       images TEXT,
       added_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS session_state (
+      key TEXT PRIMARY KEY,
+      data TEXT NOT NULL,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
     );
   """)
 
@@ -176,14 +183,39 @@ def clear_playlist():
   cursor.execute("DELETE FROM playlist_entries")
   connection.commit()
   connection.close()
-  
+
+# -----------------------------Session State---------------------------
+def save_session_state(key, state):
+  connection = get_connection()
+  cursor = connection.cursor()
+
+  cursor.execute(
+    "INSERT OR REPLACE INTO session_state (key, data) VALUES (?, ?)",
+    (key, json.dumps(state, default=list)),
+  )
+  connection.commit()
+  connection.close()
+
+def load_session_state(key):
+  connection = get_connection()
+  cursor = connection.cursor()
+  cursor.execute("SELECT data FROM session_state WHERE key = ?", (key,))
+  row = cursor.fetchone()
+  connection.close()
+  return json.loads(row[0]) if row else None
+
+def delete_session_state(key):
+  connection = get_connection()
+  cursor = connection.cursor()
+  cursor.execute("DELETE FROM session_state WHERE key = ?", (key,))
+  connection.commit()
+  connection.close()
+
 # -----------------------------Metrics---------------------------
 def get_metrics():
   connection = get_connection()
   writer = connection.cursor()
 
-  # `artists` is the full comma-separated credit list per track (features
-  # included); fall back to artist_name for older rows where it's NULL.
   writer.execute("SELECT artists, artist_name FROM playlist_entries")
   rows = writer.fetchall()
   connection.close()

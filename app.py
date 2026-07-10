@@ -11,6 +11,7 @@ from src.database import (
   init_db, write_songs, write_recommended_artists,
   update_artist_explanations, write_playlist, clear_playlist,
   get_playlist, get_metrics,
+  save_session_state, load_session_state, delete_session_state,
 )
 
 app = Flask(__name__)
@@ -18,18 +19,24 @@ app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-secret")  # needed for sessi
 
 init_db()
 
-SESSIONS = {}
-
-
 def get_state():
-  return SESSIONS.get(session.get("key"))
+  key = session.get("key")
+  if not key:
+    return None
+  state = load_session_state(key)
+  if state is not None:
+    # rejected_albums round-trips through JSON as a list; restore the set.
+    state["rejected_albums"] = set(state.get("rejected_albums", []))
+  return state
 
 
 def new_state():
-  key = str(uuid.uuid4())
-  session["key"] = key
-  SESSIONS[key] = {}
-  return SESSIONS[key]
+  session["key"] = str(uuid.uuid4())
+  return {}
+
+
+def save_state(state):
+  save_session_state(session["key"], state)
 
 
 def build_recommendations(songs, size):
@@ -95,6 +102,7 @@ def build_recommendations(songs, size):
     "playlist": candidates[:size],
     "rejected_albums": set(),
   })
+  save_state(state)
   return state, missing
 
 
@@ -176,6 +184,7 @@ def remove(index):
   # Keep at least one track — refuse to remove the final one.
   if state and len(state["playlist"]) > 1 and 0 <= index < len(state["playlist"]):
     remove_track(state, index)
+    save_state(state)
 
   if request.headers.get("X-Requested-With") == "fetch":
     if not state:
@@ -194,13 +203,13 @@ def finalize():
 
   clear_playlist()
   write_playlist(state["playlist"])
-  SESSIONS.pop(session.pop("key", None), None)   # done with this session
+  delete_session_state(session.pop("key", None))   # done with this session
   return redirect(url_for("results"))
 
 
 @app.route("/restart", methods=["POST"])
 def restart():
-  SESSIONS.pop(session.pop("key", None), None)
+  delete_session_state(session.pop("key", None))
   return redirect(url_for("create"))
 
 
